@@ -1,0 +1,30 @@
+# Dependency directories
+/vendor/
+/node_modules/
+
+# Environment files
+.env
+.env.*
+.env.local
+
+# Development files
+.idea/
+.phpunit.result.cache
+.phpunit.cache
+.DS_Store
+*.swp
+
+# Build artifacts
+/build/
+/phar/
+/composer.lock
+
+# Coverage reports
+/coverage/
+clover.xml
+phpunit.xml
+
+# Local development files
+*.local.php
+*.backup
+
