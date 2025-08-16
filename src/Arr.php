@@ -1,4 +1,4 @@
-<?php declare(strict_type=1);
+<?php declare(strict_types=1);
 
 namespace Marwa\Support;
 
@@ -12,7 +12,7 @@ class Arr
      * @param mixed $default
      * @return mixed
      */
-    public static function get(array $array, $key, $default = null)
+    public static function get(array $array, $key, ? string $default = null) : mixed
     {
         if (is_null($key)) {
             return $array;
@@ -97,7 +97,7 @@ class Arr
      * @param string $prepend
      * @return array
      */
-    public static function dot(array $array, string $prepend = ''): array
+    public static function dot(array $array, ?string $prepend = ''): array
     {
         $results = [];
 
@@ -120,7 +120,7 @@ class Arr
      * @param mixed $default
      * @return mixed
      */
-    public static function first(array $array, callable $callback = null, $default = null)
+    public static function first(array $array, ?callable $callback = null, ?string $default = null): mixed
     {
         if (is_null($callback)) {
             if (empty($array)) {
@@ -146,7 +146,7 @@ class Arr
      * @param mixed $default
      * @return mixed
      */
-    public static function last(array $array, callable $callback = null, $default = null)
+    public static function last(array $array, ?callable $callback = null, ?string $default = null): mixed
     {
         if (is_null($callback)) {
             if (empty($array)) {
@@ -166,7 +166,7 @@ class Arr
      * @param string|array|null $key
      * @return array
      */
-    public static function pluck(array $array, $value, $key = null): array
+    public static function pluck(array $array, $value, ?string $key = null): array
     {
         $results = [];
 
@@ -219,4 +219,6 @@ class Arr
     {
         return array_diff_key($array, array_flip((array) $keys));
     }
+
+    
 }

@@ -1,4 +1,4 @@
-<?php declare(strict_type=1);
+<?php declare(strict_types=1);
 
 namespace Marwa\Support;
 
@@ -184,4 +184,6 @@ class Str
         
         return trim($title, $separator);
     }
+
+
 }

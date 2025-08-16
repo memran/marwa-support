@@ -59,16 +59,16 @@ $filtered = Arr::only($array, ['user.name']); // ['user' => ['name' => 'John']]
 
 # File System Operations
 ```bash
-use Marwa\Support\FileSystem;
+use Marwa\Support\File;
 
 // Write to file
-FileSystem::put('test.txt', 'Hello World');
+File::put('test.txt', 'Hello World');
 
 // Read from file
-$content = FileSystem::get('test.txt'); // "Hello World"
+$content = File::get('test.txt'); // "Hello World"
 
 // Check if file exists
-$exists = FileSystem::exists('test.txt'); // true
+$exists = File::exists('test.txt'); // true
 ```
 
 # Object Operation
@@ -132,7 +132,7 @@ $result = Helper::retry(3, function() {
 > composer test
 
 ### Security
-If you discover any security related issues, please email memran@example.com instead of using the issue tracker.
+If you discover any security related issues, please use the issue tracker.
 
 ### Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
