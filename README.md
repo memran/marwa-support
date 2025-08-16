@@ -120,7 +120,7 @@ $result = Helper::retry(3, function() {
 
 ## Available Classe
 | Class | Description |
-| :------- | :------: | -
+| :------- | :------: |
 | Marwa\Support\Str  | String manipulation utilities |
 | Marwa\Support\Arr  | Array utilities with dot notation support |
 | Marwa\Support\FileSystem	| File system operations |
