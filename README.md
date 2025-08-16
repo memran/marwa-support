@@ -11,7 +11,7 @@ A Laravel-inspired PHP utility library with expressive syntax for common operati
 
 ```bash
 composer require memran/marwa-support
-
+```
 ## Features
 String Manipulation: Laravel-style string helpers
 Array Utilities: Dot notation access, filtering, and more
@@ -37,4 +37,4 @@ $limited = Str::limit('This is a long string', 10); // "This is a..."
 
 // Convert to camelCase
 $camel = Str::camel('hello_world'); // "helloWorld"
-
+```
