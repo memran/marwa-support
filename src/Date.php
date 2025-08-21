@@ -53,8 +53,10 @@ class Date
      */
     public static function addDays($date, int $days): \DateTime
     {
-        if (is_string($date)) {
-            $date = new \DateTime($date);
+        if ($date instanceof \DateTimeImmutable) {
+            $date = \DateTime::createFromImmutable($date);
+        } elseif (!($date instanceof \DateTime)) {
+            $date = new \DateTime((string)$date);
         }
 
         return $date->add(new \DateInterval("P{$days}D"));
@@ -69,8 +71,10 @@ class Date
      */
     public static function subDays($date, int $days): \DateTime
     {
-        if (is_string($date)) {
-            $date = new \DateTime($date);
+        if ($date instanceof \DateTimeImmutable) {
+            $date = \DateTime::createFromImmutable($date);
+        } elseif (!($date instanceof \DateTime)) {
+            $date = new \DateTime((string)$date);
         }
 
         return $date->sub(new \DateInterval("P{$days}D"));

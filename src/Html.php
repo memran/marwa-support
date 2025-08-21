@@ -7,8 +7,10 @@ use DOMDocument;
 use DOMElement;
 use DOMXPath;
 use InvalidArgumentException;
-use RuntimeException;
-
+/**
+ * Class Html
+ * Provides methods for generating and manipulating HTML elements.
+ */
 class Html
 {
     /**
