@@ -38,6 +38,19 @@ $limited = Str::limit('This is a long string', 10); // "This is a..."
 
 // Convert to camelCase
 $camel = Str::camel('hello_world'); // "helloWorld"
+
+// New pattern matching
+Str::is('*.php', 'test.php'); // true
+
+// String conversion
+Str::toBytes('2MB'); // 2097152
+
+// HTML handling
+Str::escape('<script>alert()</script>'); // &lt;script&gt;alert()&lt;/script&gt;
+
+// Advanced string extraction
+Str::between('[tag]content[/tag]', '[tag]', '[/tag]'); // 'content'
+
 ```
 
 # Array Operations
@@ -116,7 +129,122 @@ $result = Helper::retry(3, function() {
     // Operation that might fail
 });
 ```
+# HTML
 
+```bash
+// Generate a link
+echo Html::link('https://example.com', 'Visit Example');
+
+// Generate a form
+echo Html::form('/submit', 'POST', [
+    'class' => 'my-form'
+]);
+
+// Parse HTML
+$results = Html::extract($html, 'div.user > span.name');
+
+// Generate complete document
+echo Html::document('My Page', '<h1>Hello World</h1>', [
+    'description' => 'A test page'
+]);
+
+```
+
+# Collection
+
+```bash
+// Collection usage
+$collection = Collection::make([1, 2, 3, 4, 5])
+    ->filter(fn($n) => $n > 2)
+    ->map(fn($n) => $n * 2)
+    ->values();
+```
+
+# Finder
+
+```bash
+// Finder with collection methods
+$files = Finder::in('/app')
+    ->name('.*\.php$')
+    ->files()
+    ->map(fn($file) => $file->getPathname())
+    ->sortBy(fn($path) => $path)
+    ->values();
+```
+# Validation Example
+
+```bash
+// Basic validation
+$data = [
+    'name' => 'John Doe',
+    'email' => 'john@example.com',
+    'password' => 'secret',
+    'password_confirmation' => 'secret',
+    'age' => 25
+];
+
+$rules = [
+    'name' => 'required|string|min:3|max:255',
+    'email' => 'required|email',
+    'password' => 'required|min:6|same:password_confirmation',
+    'age' => 'required|numeric|min:18'
+];
+
+$validator = Validation::make($data, $rules);
+
+if ($validator->fails()) {
+    $errors = $validator->errors();
+    // Handle errors
+} else {
+    // Validation passed
+}
+
+// Custom error messages
+$messages = [
+    'email.required' => 'We need your email address!',
+    'password.min' => 'Password must be at least 6 characters long!'
+];
+
+$validator = Validation::make($data, $rules, $messages);
+
+// Custom validation rule
+$validator->extend('uppercase', function($field, $value, $parameters) {
+    return strtoupper($value) === $value;
+});
+
+$rules = ['name' => 'required|uppercase'];
+```
+
+# Security Example
+
+```bash
+// Password handling
+$hash = Security::passwordHash('secret123');
+$isValid = Security::passwordVerify('secret123', $hash);
+
+// Encryption
+$encrypted = Security::encrypt('sensitive data', 'your-secret-key');
+$decrypted = Security::decrypt($encrypted, 'your-secret-key');
+
+// CSRF protection
+$token = Security::csrfToken();
+// In form: <input type="hidden" name="csrf_token" value="<?= $token ?>">
+
+if ($_POST) {
+    $isValid = Security::verifyCsrfToken($_POST['csrf_token']);
+}
+
+// Sanitization
+$clean = Security::sanitize($_POST['input'], 'string');
+$isEmail = Security::validate($_POST['email'], 'email');
+
+// XSS prevention
+$safeHtml = Security::xssClean('<script>alert("xss")</script>');
+
+// File upload safety
+$safeName = Security::safeFileName('malicious file.php.jpg');
+
+```
 
 ## Available Classe
 | Class | Description |
