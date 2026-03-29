@@ -23,7 +23,6 @@
 # Coverage reports
 /coverage/
 clover.xml
-phpunit.xml
 /var/
 
 # Local development files
