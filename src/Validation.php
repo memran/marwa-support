@@ -1,9 +1,8 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Marwa\Support;
-
-use Exception;
 
 class Validation
 {
@@ -15,7 +14,7 @@ class Validation
 
     public static function make(array $data, array $rules, array $messages = []): self
     {
-        $validator = new static();
+        $validator = new self();
         $validator->data = $data;
         $validator->rules = $rules;
         $validator->messages = $messages;
@@ -29,6 +28,10 @@ class Validation
         foreach ($this->rules as $field => $rules) {
             $rules = is_array($rules) ? $rules : explode('|', $rules);
             $value = $this->getValue($field);
+
+            if (in_array('nullable', $rules, true) && ($value === null || $value === '')) {
+                continue;
+            }
 
             foreach ($rules as $rule) {
                 $this->validateRule($field, $value, $rule);
@@ -93,7 +96,7 @@ class Validation
 
     protected function getValue(string $field)
     {
-        return $this->data[$field] ?? null;
+        return Helper::dataGet($this->data, $field);
     }
 
     protected function getMessage(string $field, string $rule, array $parameters): string
@@ -121,7 +124,7 @@ class Validation
             'numeric' => "The {$field} must be a number.",
             'string' => "The {$field} must be a string.",
             'array' => "The {$field} must be an array.",
-            'in' => "The {$field} must be one of: " . implode(', ', $parameters) . ".",
+            'in' => "The {$field} must be one of: " . implode(', ', $parameters) . '.',
             'same' => "The {$field} must match {$parameters[0]}.",
         ];
 

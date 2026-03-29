@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Marwa\Support;
@@ -16,7 +17,7 @@ class Hash
 
         $hash = password_hash($password, $options['algorithm'], $options);
 
-        if ($hash === false) {
+        if (!is_string($hash)) {
             throw new RuntimeException('Password hashing failed');
         }
 

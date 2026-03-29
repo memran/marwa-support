@@ -1,15 +1,8 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Marwa\Support;
-
-use Marwa\Support\Crypt;
-use Marwa\Support\Hash;
-use Marwa\Support\Random;
-use Marwa\Support\Sanitizer;
-use Marwa\Support\Validator;
-use Marwa\Support\CSRF;
-use Marwa\Support\XSS;
 
 class Security
 {

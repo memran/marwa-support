@@ -1,0 +1,10 @@
+parameters:
+    level: 5
+    paths:
+        - src
+    bootstrapFiles:
+        - vendor/autoload.php
+    tmpDir: var/phpstan
+    parallel:
+        maximumNumberOfProcesses: 1
+    treatPhpDocTypesAsCertain: true

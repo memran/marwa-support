@@ -1,12 +1,13 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Marwa\Support\Tests;
 
+use InvalidArgumentException;
 use Marwa\Support\File as FileSystem;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
-use InvalidArgumentException;
 
 class FileSystemTest extends TestCase
 {
@@ -17,14 +18,14 @@ class FileSystemTest extends TestCase
     protected function setUp(): void
     {
         $this->cleanup();
-        
+
     }
 
     protected function tearDown(): void
     {
         $this->cleanup();
     }
-   
+
     private function cleanup(): void
     {
         if (file_exists($this->testFile)) {
@@ -40,7 +41,7 @@ class FileSystemTest extends TestCase
 
     protected function makeDirectoryIfNotExits()
     {
-         // First create the test directory if it doesn't exist
+        // First create the test directory if it doesn't exist
         if (!is_dir($this->testDir)) {
             mkdir($this->testDir, 0755, true);
         }
@@ -49,10 +50,10 @@ class FileSystemTest extends TestCase
     public function testPutCreatesFileAndDirectory()
     {
         $this->assertDirectoryDoesNotExist($this->testDir);
-        
+
         $bytes = FileSystem::put($this->testFile, 'Hello World');
         $this->assertEquals(11, $bytes);
-        
+
         $this->assertFileExists($this->testFile);
         $this->assertEquals('Hello World', file_get_contents($this->testFile));
     }
@@ -61,7 +62,7 @@ class FileSystemTest extends TestCase
     {
         $data = ['name' => 'John', 'age' => 30];
         FileSystem::put($this->testFile, $data);
-        
+
         $this->assertJsonStringEqualsJsonString(
             json_encode($data),
             file_get_contents($this->testFile)
@@ -84,7 +85,7 @@ class FileSystemTest extends TestCase
     {
         FileSystem::put($this->testFile, 'Hello');
         FileSystem::append($this->testFile, ' World');
-        
+
         $this->assertEquals('Hello World', file_get_contents($this->testFile));
     }
 
@@ -107,13 +108,13 @@ class FileSystemTest extends TestCase
         if (!is_dir($this->testDir)) {
             mkdir($this->testDir, 0755, true);
         }
-        
+
         // Create the test file with known content
         file_put_contents($this->testFile, 'Test content');
-        
+
         // Verify the file was created
         $this->assertFileExists($this->testFile);
-        
+
         // Test the get() method
         $this->assertEquals('Test content', FileSystem::get($this->testFile));
     }
@@ -179,7 +180,7 @@ class FileSystemTest extends TestCase
     {
         file_put_contents($this->testFile, 'source');
         file_put_contents($this->tempFile, 'destination');
-        
+
         $this->expectException(RuntimeException::class);
         FileSystem::copy($this->testFile, $this->tempFile);
     }

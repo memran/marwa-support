@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Marwa\Support;
 
@@ -12,7 +14,7 @@ class Arr
      * @param mixed $default
      * @return mixed
      */
-    public static function get(array $array, $key, ? string $default = null) : mixed
+    public static function get(array $array, int|string|null $key, mixed $default = null): mixed
     {
         if (is_null($key)) {
             return $array;
@@ -20,6 +22,10 @@ class Arr
 
         if (array_key_exists($key, $array)) {
             return $array[$key];
+        }
+
+        if (is_int($key)) {
+            return $default;
         }
 
         foreach (explode('.', $key) as $segment) {
@@ -41,10 +47,18 @@ class Arr
      * @param mixed $value
      * @return array
      */
-    public static function set(array &$array, $key, $value): array
+    public static function set(array &$array, int|string|null $key, mixed $value): array
     {
         if (is_null($key)) {
-            return $array = $value;
+            $array = is_array($value) ? $value : [$value];
+
+            return $array;
+        }
+
+        if (is_int($key)) {
+            $array[$key] = $value;
+
+            return $array;
         }
 
         $keys = explode('.', $key);
@@ -69,7 +83,7 @@ class Arr
      * @param string|int|null $key
      * @return bool
      */
-    public static function has(array $array, $key): bool
+    public static function has(array $array, int|string|null $key): bool
     {
         if (empty($array) || is_null($key)) {
             return false;
@@ -77,6 +91,10 @@ class Arr
 
         if (array_key_exists($key, $array)) {
             return true;
+        }
+
+        if (is_int($key)) {
+            return false;
         }
 
         foreach (explode('.', $key) as $segment) {
@@ -120,7 +138,7 @@ class Arr
      * @param mixed $default
      * @return mixed
      */
-    public static function first(array $array, ?callable $callback = null, ?string $default = null): mixed
+    public static function first(array $array, ?callable $callback = null, mixed $default = null): mixed
     {
         if (is_null($callback)) {
             if (empty($array)) {
@@ -146,7 +164,7 @@ class Arr
      * @param mixed $default
      * @return mixed
      */
-    public static function last(array $array, ?callable $callback = null, ?string $default = null): mixed
+    public static function last(array $array, ?callable $callback = null, mixed $default = null): mixed
     {
         if (is_null($callback)) {
             if (empty($array)) {
@@ -162,17 +180,17 @@ class Arr
      * Pluck an array of values from an array.
      *
      * @param array $array
-     * @param string|array $value
-     * @param string|array|null $key
+     * @param string $value
+     * @param string|null $key
      * @return array
      */
-    public static function pluck(array $array, $value, ?string $key = null): array
+    public static function pluck(array $array, string $value, ?string $key = null): array
     {
         $results = [];
 
         foreach ($array as $item) {
             $itemValue = static::get($item, $value);
-            
+
             if (is_null($key)) {
                 $results[] = $itemValue;
             } else {
@@ -220,5 +238,5 @@ class Arr
         return array_diff_key($array, array_flip((array) $keys));
     }
 
-    
+
 }

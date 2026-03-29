@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Marwa\Support;
@@ -46,9 +47,27 @@ class Helper
      * @param U $default
      * @return U
      */
-    public static function with($value, callable $callback, ?string $default = null)
+    public static function with($value, callable $callback, $default = null)
     {
+        if ($value === null) {
+            return $default;
+        }
+
         return $callback($value) ?? $default;
+    }
+
+    /**
+     * Dump values as a string without terminating execution.
+     */
+    public static function dump(...$args): string
+    {
+        ob_start();
+
+        foreach ($args as $arg) {
+            var_dump($arg);
+        }
+
+        return (string) ob_get_clean();
     }
 
     /**
@@ -59,16 +78,14 @@ class Helper
      */
     public static function dd(...$args): void
     {
-        foreach ($args as $arg) {
-            var_dump($arg);
-        }
+        echo self::dump(...$args);
         exit(1);
     }
 
     /**
      * Retry operation with strict typing
      *
-     * @param positive-int $times
+     * @param int $times
      * @param callable(): mixed $callback
      * @param int<0, max> $sleep Milliseconds
      * @return mixed
@@ -76,31 +93,34 @@ class Helper
      */
     public static function retry(int $times, callable $callback, int $sleep = 0)
     {
-        beginning:
-        try {
-            return $callback();
-        } catch (\Exception $e) {
-            if (--$times < 1) {
-                throw $e;
-            }
-
-            if ($sleep > 0) {
-                usleep($sleep * 1000);
-            }
-
-            goto beginning;
+        if ($times < 1) {
+            throw new \InvalidArgumentException('Retry attempts must be greater than zero');
         }
+
+        do {
+            try {
+                return $callback();
+            } catch (\Throwable $e) {
+                if (--$times < 1) {
+                    throw $e;
+                }
+
+                if ($sleep > 0) {
+                    usleep($sleep * 1000);
+                }
+            }
+        } while (true);
     }
 
     /**
      * Get nested data with strict typing
      *
      * @param mixed $target
-     * @param string|array<int, string> $key
+     * @param string|array<int, string>|null $key
      * @param mixed $default
      * @return mixed
      */
-    public static function dataGet($target, $key, ?string $default = null)
+    public static function dataGet($target, $key, $default = null)
     {
         if (is_null($key)) {
             return $target;
@@ -147,10 +167,16 @@ class Helper
      * @param mixed $value
      * @return bool
      */
-    public static function empty($value): bool {
-        if (is_numeric($value)) return false;
-        if (is_bool($value)) return false;
-        if (is_object($value)) return false;
+    public static function empty($value): bool
+    {
+        if (is_numeric($value) || is_bool($value)) {
+            return false;
+        }
+
+        if (is_object($value)) {
+            return count(get_object_vars($value)) === 0;
+        }
+
         return empty($value);
     }
 
@@ -159,9 +185,16 @@ class Helper
      * @param mixed $var
      * @return string
      */
-    public static function typeOf($var): string {
-        if (is_object($var)) return get_class($var);
-        if (is_callable($var)) return 'callable';
+    public static function typeOf($var): string
+    {
+        if ($var instanceof \Closure) {
+            return 'callable';
+        }
+
+        if (is_object($var)) {
+            return get_class($var);
+        }
+
         return gettype($var);
     }
 
@@ -170,8 +203,9 @@ class Helper
      * @param callable $function
      * @return callable
      */
-    public static function memoize(callable $function): callable {
-        return function() use ($function) {
+    public static function memoize(callable $function): callable
+    {
+        return function () use ($function) {
             static $cache = [];
             $args = func_get_args();
             $key = serialize($args);
@@ -184,12 +218,24 @@ class Helper
      * @param callable $function
      * @return callable
      */
-    public static function curry(callable $function): callable {
-        return function(...$args) use ($function) {
-            return count($args) >= (new \ReflectionFunction($function))->getNumberOfRequiredParameters()
-                ? $function(...$args)
-                : self::curry(fn(...$newArgs) => $function(...array_merge($args, $newArgs)));
+    public static function curry(callable $function): callable
+    {
+        $reflection = new \ReflectionFunction(\Closure::fromCallable($function));
+        $requiredParameters = $reflection->getNumberOfRequiredParameters();
+
+        $resolver = static function (array $arguments) use (&$resolver, $function, $requiredParameters) {
+            return static function (...$newArguments) use (&$resolver, $function, $requiredParameters, $arguments) {
+                $mergedArguments = array_merge($arguments, $newArguments);
+
+                if (count($mergedArguments) >= $requiredParameters) {
+                    return $function(...$mergedArguments);
+                }
+
+                return $resolver($mergedArguments);
+            };
         };
+
+        return $resolver([]);
     }
 
     /**
@@ -198,7 +244,8 @@ class Helper
      * @param string|callable $groupBy
      * @return array
      */
-    public static function groupBy(array $array, $groupBy): array {
+    public static function groupBy(array $array, $groupBy): array
+    {
         $result = [];
         foreach ($array as $item) {
             $key = is_callable($groupBy) ? $groupBy($item) : ($item[$groupBy] ?? null);
@@ -213,7 +260,8 @@ class Helper
      * @param string|callable $keyBy
      * @return array
      */
-    public static function keyBy(array $array, $keyBy): array {
+    public static function keyBy(array $array, $keyBy): array
+    {
         $result = [];
         foreach ($array as $item) {
             $key = is_callable($keyBy) ? $keyBy($item) : ($item[$keyBy] ?? null);
@@ -221,14 +269,19 @@ class Helper
         }
         return $result;
     }
-       /**
+    /**
      * Calculate percentage
      * @param float|int $part
      * @param float|int $whole
      * @param int $decimals
      * @return float
      */
-    public static function percentage($part, $whole, int $decimals = 2): float {
+    public static function percentage($part, $whole, int $decimals = 2): float
+    {
+        if ((float) $whole === 0.0) {
+            throw new \InvalidArgumentException('Whole must not be zero');
+        }
+
         return round(($part / $whole) * 100, $decimals);
     }
 
@@ -248,6 +301,10 @@ class Helper
         float $toLow,
         float $toHigh
     ): float {
+        if ($fromHigh === $fromLow) {
+            throw new \InvalidArgumentException('Source range must not be zero');
+        }
+
         return ($value - $fromLow) * ($toHigh - $toLow) / ($fromHigh - $fromLow) + $toLow;
     }
 
@@ -256,7 +313,8 @@ class Helper
      * @param object $object
      * @return object
      */
-    public static function deepClone(object $object): object {
+    public static function deepClone(object $object): object
+    {
         return unserialize(serialize($object));
     }
 
@@ -266,21 +324,17 @@ class Helper
      * @param string $interface
      * @return bool
      */
-    public static function implements($object, string $interface): bool {
-        return in_array($interface, class_implements($object));
+    public static function implements($object, string $interface): bool
+    {
+        return in_array($interface, class_implements($object), true);
     }
-        /**
+    /**
      * Generate UUID v4
      * @return string
      */
-    public static function uuid(): string {
-        return sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
-            mt_rand(0, 0xffff), mt_rand(0, 0xffff),
-            mt_rand(0, 0xffff),
-            mt_rand(0, 0x0fff) | 0x4000,
-            mt_rand(0, 0x3fff) | 0x8000,
-            mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
-        );
+    public static function uuid(): string
+    {
+        return Random::uuid();
     }
 
     /**
@@ -290,33 +344,38 @@ class Helper
      * @param string $append
      * @return string
      */
-    public static function truncate(string $string, int $length, string $append = '...'): string {
-        if (mb_strlen($string) <= $length) return $string;
+    public static function truncate(string $string, int $length, string $append = '...'): string
+    {
+        if (mb_strlen($string) <= $length) {
+            return $string;
+        }
         return mb_substr($string, 0, $length) . $append;
     }
-     /**
-         * Measure execution time of callback
-         * @param callable $callback
-         * @param int $precision
-         * @return float Execution time in milliseconds
-         */
-        public static function measure(callable $callback, int $precision = 4): float {
-            $start = microtime(true);
-            $callback();
-            return round((microtime(true) - $start) * 1000, $precision);
-        }
+    /**
+        * Measure execution time of callback
+        * @param callable $callback
+        * @param int $precision
+        * @return float Execution time in milliseconds
+        */
+    public static function measure(callable $callback, int $precision = 4): float
+    {
+        $start = microtime(true);
+        $callback();
+        return round((microtime(true) - $start) * 1000, $precision);
+    }
 
-        /**
-         * Get memory usage in human-readable format
-         * @param int $bytes
-         * @return string
-         */
-        public static function memoryUsage(int $bytes): string {
-            $units = ['B', 'KB', 'MB', 'GB', 'TB'];
-            $bytes = max($bytes, 0);
-            $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
-            $pow = min($pow, count($units) - 1);
-            $bytes /= (1 << (10 * $pow));
-            return round($bytes, 2) . ' ' . $units[$pow];
-        }
+    /**
+     * Get memory usage in human-readable format
+     * @param int $bytes
+     * @return string
+     */
+    public static function memoryUsage(int $bytes): string
+    {
+        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+        $bytes = max($bytes, 0);
+        $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
+        $pow = min($pow, count($units) - 1);
+        $bytes /= (1 << (10 * $pow));
+        return number_format($bytes, 2, '.', '') . ' ' . $units[$pow];
+    }
 }

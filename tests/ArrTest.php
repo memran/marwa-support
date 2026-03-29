@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Marwa\Support\Tests;
@@ -38,7 +39,7 @@ class ArrTest extends TestCase
     public function testWhere()
     {
         $array = ['a' => 1, 'b' => 2, 'c' => 3];
-        $filtered = Arr::where($array, fn($value) => $value > 1);
+        $filtered = Arr::where($array, fn ($value) => $value > 1);
         $this->assertEquals(['b' => 2, 'c' => 3], $filtered);
     }
 }

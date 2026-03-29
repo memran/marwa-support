@@ -1,8 +1,10 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 require 'vendor/autoload.php';
 
-use Marwa\Support\{File, Str, Arr, Obj, Date, Helper};
+use Marwa\Support\{Arr, Date, File, Helper, Obj, Str};
 
 // String examples
 $slug = Str::slug('Hello World!'); // "hello-world"
@@ -30,7 +32,7 @@ $tomorrow = Date::addDays($now, 1);
 Helper::dd($slug, $limited, $name);
 
 // Tap example
-$result = Helper::tap($value, function($v) {
+$result = Helper::tap($value, function ($v) {
     Logger::debug('Current value', $v);
 });
 

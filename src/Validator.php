@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Marwa\Support;
@@ -15,7 +16,7 @@ class Validator
             'domain' => filter_var($input, FILTER_VALIDATE_DOMAIN) !== false,
             'int' => filter_var($input, FILTER_VALIDATE_INT) !== false,
             'float' => filter_var($input, FILTER_VALIDATE_FLOAT) !== false,
-            'boolean' => filter_var($input, FILTER_VALIDATE_BOOLEAN) !== false,
+            'boolean' => filter_var($input, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) !== null,
             default => false
         };
     }

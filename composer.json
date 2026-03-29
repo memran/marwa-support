@@ -1,6 +1,6 @@
 {
   "name": "memran/marwa-support",
-  "description": "Marwa support library for PHP 8+ with utility classes for strings, arrays, files, objects, and more",
+  "description": "Framework-agnostic PHP support library with typed helpers for strings, arrays, files, objects, validation, and security primitives",
   "type": "library",
   "license": "MIT",
   "authors": [
@@ -9,13 +9,23 @@
       "email": "memran.dhk@gmail.com"
     }
   ],
+  "keywords": [
+    "php",
+    "helpers",
+    "utilities",
+    "validation",
+    "security"
+  ],
   "require": {
-    "php": "^8.0",
+    "php": "^8.2",
     "ext-json": "*",
-    "ext-mbstring": "*"
+    "ext-mbstring": "*",
+    "ext-openssl": "*"
   },
   "require-dev": {
-    "phpunit/phpunit": "^9.6"
+    "friendsofphp/php-cs-fixer": "^3.66",
+    "phpstan/phpstan": "^1.12",
+    "phpunit/phpunit": "^9.6.33"
   },
   "autoload": {
     "psr-4": {
@@ -29,7 +39,15 @@
   },
   "scripts": {
     "test": "phpunit",
-    "test-coverage": "phpunit --coverage-html coverage"
+    "test:coverage": "phpunit --coverage-text --colors=never",
+    "analyse": "phpstan analyse --configuration=phpstan.neon.dist --no-progress --debug --memory-limit=512M",
+    "lint": "php-cs-fixer fix --config=.php-cs-fixer.dist.php --dry-run --diff --verbose --sequential",
+    "fix": "php-cs-fixer fix --config=.php-cs-fixer.dist.php --verbose --sequential",
+    "ci": [
+      "@lint",
+      "@analyse",
+      "@test"
+    ]
   },
   "minimum-stability": "dev",
   "prefer-stable": true,

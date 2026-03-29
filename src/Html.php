@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Marwa\Support;
@@ -7,6 +8,7 @@ use DOMDocument;
 use DOMElement;
 use DOMXPath;
 use InvalidArgumentException;
+
 /**
  * Class Html
  * Provides methods for generating and manipulating HTML elements.
@@ -20,13 +22,13 @@ class Html
     {
         $tag = strtolower(trim($tag));
         self::validateTag($tag);
-        
+
         $attrs = self::attributes($attributes);
-        
+
         if (self::isVoidElement($tag)) {
             return "<{$tag}{$attrs}>";
         }
-        
+
         return "<{$tag}{$attrs}>" . ($content ?? '') . "</{$tag}>";
     }
 
@@ -36,7 +38,7 @@ class Html
     public static function attributes(array $attributes): string
     {
         $html = [];
-        
+
         foreach ($attributes as $key => $value) {
             if (is_bool($value)) {
                 if ($value) {
@@ -48,7 +50,7 @@ class Html
                 $html[] = $key . '="' . htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8') . '"';
             }
         }
-        
+
         return $html ? ' ' . implode(' ', $html) : '';
     }
 
@@ -58,11 +60,11 @@ class Html
     public static function link(string $url, ?string $text = null, array $attributes = []): string
     {
         $attributes['href'] = $url;
-        
+
         if ($text === null) {
             $text = $url;
         }
-        
+
         return self::element('a', $attributes, $text);
     }
 
@@ -73,7 +75,7 @@ class Html
     {
         $attributes['src'] = $src;
         $attributes['alt'] = $alt;
-        
+
         return self::element('img', $attributes);
     }
 
@@ -83,7 +85,7 @@ class Html
     public static function script(string $src, array $attributes = []): string
     {
         $attributes['src'] = $src;
-        
+
         return self::element('script', $attributes);
     }
 
@@ -94,7 +96,7 @@ class Html
     {
         $attributes['rel'] = 'stylesheet';
         $attributes['href'] = $href;
-        
+
         return self::element('link', $attributes);
     }
 
@@ -105,7 +107,7 @@ class Html
     {
         $attributes['name'] = $name;
         $attributes['content'] = $content;
-        
+
         return self::element('meta', $attributes);
     }
 
@@ -116,7 +118,7 @@ class Html
     {
         $attributes['action'] = $action;
         $attributes['method'] = strtoupper($method);
-        
+
         return self::element('form', $attributes);
     }
 
@@ -127,11 +129,11 @@ class Html
     {
         $attributes['type'] = $type;
         $attributes['name'] = $name;
-        
+
         if ($value !== null) {
             $attributes['value'] = $value;
         }
-        
+
         return self::element('input', $attributes);
     }
 
@@ -141,7 +143,7 @@ class Html
     public static function select(string $name, array $options, ?string $selected = null, array $attributes = []): string
     {
         $attributes['name'] = $name;
-        
+
         $optionsHtml = '';
         foreach ($options as $value => $label) {
             $optionAttrs = ['value' => $value];
@@ -150,7 +152,7 @@ class Html
             }
             $optionsHtml .= self::element('option', $optionAttrs, $label);
         }
-        
+
         return self::element('select', $attributes, $optionsHtml);
     }
 
@@ -160,22 +162,22 @@ class Html
     public static function fromArray(array $structure): string
     {
         $html = '';
-        
+
         foreach ($structure as $tag => $content) {
             if (is_array($content)) {
                 $attributes = $content['attributes'] ?? [];
                 $children = $content['content'] ?? '';
-                
+
                 if (is_array($children)) {
                     $children = self::fromArray($children);
                 }
-                
+
                 $html .= self::element($tag, $attributes, $children);
             } else {
                 $html .= self::element($tag, [], $content);
             }
         }
-        
+
         return $html;
     }
 
@@ -190,9 +192,9 @@ class Html
             '/(\s)+/s',          // shorten multiple whitespace sequences
             '/<!--(.|\s)*?-->/', // remove HTML comments
         ];
-        
+
         $replace = ['>', '<', '\\1', ''];
-        
+
         return preg_replace($search, $replace, $html);
     }
 
@@ -211,19 +213,23 @@ class Html
     {
         $dom = new DOMDocument();
         @$dom->loadHTML($html, LIBXML_NOERROR | LIBXML_NOWARNING);
-        
+
         $xpath = new DOMXPath($dom);
         $elements = $xpath->query(self::cssToXpath($selector));
-        
+
         $result = [];
         foreach ($elements as $element) {
+            if (!$element instanceof DOMElement) {
+                continue;
+            }
+
             $result[] = [
                 'html' => $dom->saveHTML($element),
                 'text' => $element->textContent,
                 'attributes' => self::getElementAttributes($element)
             ];
         }
-        
+
         return $result;
     }
 
@@ -238,7 +244,7 @@ class Html
         $selector = preg_replace('/\s*~\s*/', '/following-sibling::', $selector);
         $selector = preg_replace('/#([\w-]+)/', '[@id="$1"]', $selector);
         $selector = preg_replace('/\.([\w-]+)/', '[contains(concat(" ", @class, " "), " $1 ")]', $selector);
-        
+
         return '//' . $selector;
     }
 
@@ -294,7 +300,7 @@ class Html
     private static function isVoidElement(string $tag): bool
     {
         $voidElements = [
-            'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 
+            'area', 'base', 'br', 'col', 'embed', 'hr', 'img',
             'input', 'link', 'meta', 'param', 'source', 'track', 'wbr'
         ];
 
@@ -335,9 +341,13 @@ class Html
             $metaTags .= self::meta($name, $content);
         }
 
-        return self::doctype() . 
-               self::element('html', ['lang' => 'en'], 
-                   self::element('head', [],
+        return self::doctype() .
+               self::element(
+                   'html',
+                   ['lang' => 'en'],
+                   self::element(
+                       'head',
+                       [],
                        self::element('title', [], $title) .
                        $metaTags .
                        self::element('meta', ['charset' => 'UTF-8']) .

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Marwa\Support;
@@ -19,7 +20,7 @@ class Collection implements Countable, IteratorAggregate, JsonSerializable
 
     public static function make(array $items = []): self
     {
-        return new static($items);
+        return new self($items);
     }
 
     public function all(): array
@@ -44,7 +45,7 @@ class Collection implements Countable, IteratorAggregate, JsonSerializable
         return $this;
     }
 
-    public function first(callable $callback = null, $default = null)
+    public function first(?callable $callback = null, $default = null)
     {
         if (is_null($callback)) {
             return $this->items[0] ?? $default;
@@ -59,7 +60,7 @@ class Collection implements Countable, IteratorAggregate, JsonSerializable
         return $default;
     }
 
-    public function last(callable $callback = null, $default = null)
+    public function last(?callable $callback = null, $default = null)
     {
         if (is_null($callback)) {
             return empty($this->items) ? $default : end($this->items);
@@ -75,18 +76,18 @@ class Collection implements Countable, IteratorAggregate, JsonSerializable
         return $result;
     }
 
-    public function filter(callable $callback = null): self
+    public function filter(?callable $callback = null): self
     {
         if ($callback) {
-            return new static(array_filter($this->items, $callback, ARRAY_FILTER_USE_BOTH));
+            return new self(array_filter($this->items, $callback, ARRAY_FILTER_USE_BOTH));
         }
 
-        return new static(array_filter($this->items));
+        return new self(array_filter($this->items));
     }
 
     public function map(callable $callback): self
     {
-        return new static(array_map($callback, $this->items, array_keys($this->items)));
+        return new self(array_map($callback, $this->items, array_keys($this->items)));
     }
 
     public function each(callable $callback): self
@@ -100,7 +101,7 @@ class Collection implements Countable, IteratorAggregate, JsonSerializable
         return $this;
     }
 
-    public function pluck(string $value, string $key = null): self
+    public function pluck(string $value, ?string $key = null): self
     {
         $results = [];
 
@@ -115,17 +116,17 @@ class Collection implements Countable, IteratorAggregate, JsonSerializable
             }
         }
 
-        return new static($results);
+        return new self($results);
     }
 
     public function keys(): self
     {
-        return new static(array_keys($this->items));
+        return new self(array_keys($this->items));
     }
 
     public function values(): self
     {
-        return new static(array_values($this->items));
+        return new self(array_values($this->items));
     }
 
     public function sortBy(callable $callback, bool $descending = false): self
@@ -139,7 +140,7 @@ class Collection implements Countable, IteratorAggregate, JsonSerializable
             return $descending ? $bValue <=> $aValue : $aValue <=> $bValue;
         });
 
-        return new static($results);
+        return new self($results);
     }
 
     public function groupBy($groupBy): self
@@ -147,13 +148,13 @@ class Collection implements Countable, IteratorAggregate, JsonSerializable
         $results = [];
 
         foreach ($this->items as $key => $value) {
-            $groupKey = is_callable($groupBy) ? $groupBy($value, $key) : 
+            $groupKey = is_callable($groupBy) ? $groupBy($value, $key) :
                        (is_object($value) ? $value->{$groupBy} : $value[$groupBy]);
 
             $results[$groupKey][] = $value;
         }
 
-        return new static($results);
+        return new self($results);
     }
 
     public function count(): int
@@ -180,7 +181,7 @@ class Collection implements Countable, IteratorAggregate, JsonSerializable
 
     public function toJson(int $options = 0): string
     {
-        return json_encode($this->toArray(), $options);
+        return json_encode($this->toArray(), $options | JSON_THROW_ON_ERROR);
     }
 
     public function jsonSerialize(): array

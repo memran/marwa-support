@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Marwa\Support;
@@ -14,30 +15,30 @@ class Finder
 
     public static function in(string|array $paths): self
     {
-        $finder = new static();
+        $finder = new self();
         $finder->paths = is_array($paths) ? $paths : [$paths];
         return $finder;
     }
 
     public function files(): Collection
     {
-        return $this->find()->filter(fn($file) => $file->isFile());
+        return $this->find()->filter(fn ($file) => $file->isFile());
     }
 
     public function directories(): Collection
     {
-        return $this->find()->filter(fn($file) => $file->isDir());
+        return $this->find()->filter(fn ($file) => $file->isDir());
     }
 
     public function name(string $pattern): self
     {
-        $this->filters[] = fn($file) => preg_match("/{$pattern}/", $file->getFilename());
+        $this->filters[] = fn ($file) => preg_match("/{$pattern}/", $file->getFilename());
         return $this;
     }
 
     public function size(string $operator, int $size): self
     {
-        $this->filters[] = fn($file) => match($operator) {
+        $this->filters[] = fn ($file) => match($operator) {
             '>' => $file->getSize() > $size,
             '>=' => $file->getSize() >= $size,
             '<' => $file->getSize() < $size,
@@ -53,7 +54,9 @@ class Finder
         $results = new Collection();
 
         foreach ($this->paths as $path) {
-            if (!is_dir($path)) continue;
+            if (!is_dir($path)) {
+                continue;
+            }
 
             $iterator = new RecursiveIteratorIterator(
                 new RecursiveDirectoryIterator($path, RecursiveDirectoryIterator::SKIP_DOTS),

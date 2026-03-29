@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Marwa\Support;
 
@@ -12,7 +14,7 @@ class Obj
      */
     public static function toArray(object $object): array
     {
-        return json_decode(json_encode($object), true);
+        return self::normalizeValue($object);
     }
 
     /**
@@ -88,7 +90,7 @@ class Obj
      */
     public static function toJson(object $object, int $options = 0): string
     {
-        return json_encode($object, $options);
+        return json_encode(self::toArray($object), $options | JSON_THROW_ON_ERROR);
     }
 
     /**
@@ -124,4 +126,30 @@ class Obj
         return get_object_vars($object);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
+    private static function normalizeValue(object $object): array
+    {
+        $result = [];
+
+        foreach (get_object_vars($object) as $key => $value) {
+            if (is_object($value)) {
+                $result[$key] = self::normalizeValue($value);
+                continue;
+            }
+
+            if (is_array($value)) {
+                $result[$key] = array_map(
+                    static fn ($item) => is_object($item) ? self::normalizeValue($item) : $item,
+                    $value
+                );
+                continue;
+            }
+
+            $result[$key] = $value;
+        }
+
+        return $result;
+    }
 }

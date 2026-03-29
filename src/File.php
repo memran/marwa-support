@@ -1,10 +1,11 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Marwa\Support;
 
-use RuntimeException;
 use InvalidArgumentException;
+use RuntimeException;
 
 class File
 {
@@ -15,13 +16,13 @@ class File
         string $path,
         $contents,
         int $flags = 0,
-        int $mode = 0755,
+        int $mode = 0644,
         bool $createDir = true
     ): int {
         self::validatePath($path);
-        
+
         if ($createDir) {
-            self::ensureDirectoryExists(dirname($path), $mode);
+            self::ensureDirectoryExists(dirname($path), 0755);
         }
 
         if (is_array($contents) || is_object($contents)) {
@@ -29,29 +30,38 @@ class File
         }
 
         $tempPath = $path . '.' . uniqid('', true) . '.tmp';
-        $bytes = file_put_contents($tempPath, (string)$contents, $flags | LOCK_EX);
-        
-        if ($bytes === false || !rename($tempPath, $path)) {
-            throw new RuntimeException("Failed to write file: {$path}");
+        $bytes = @file_put_contents($tempPath, (string) $contents, $flags | LOCK_EX);
+
+        if ($bytes === false) {
+            @unlink($tempPath);
+            throw new RuntimeException("Failed to write temporary file: {$path}");
         }
 
-        chmod($path, $mode);
+        if (!@rename($tempPath, $path)) {
+            @unlink($tempPath);
+            throw new RuntimeException("Failed to move temporary file into place: {$path}");
+        }
+
+        if (!@chmod($path, $mode)) {
+            throw new RuntimeException("Failed to set file permissions: {$path}");
+        }
+
         return $bytes;
     }
 
     /**
      * Safely append to a file
      */
-    public static function append(string $path, string $contents, int $mode = 0755): int
+    public static function append(string $path, string $contents, int $mode = 0644): int
     {
         self::validatePath($path);
         self::ensureFileExists($path, $mode);
-        
+
         $bytes = file_put_contents($path, $contents, FILE_APPEND | LOCK_EX);
         if ($bytes === false) {
             throw new RuntimeException("Failed to append to file: {$path}");
         }
-        
+
         return $bytes;
     }
 
@@ -62,12 +72,12 @@ class File
     {
         self::validatePath($path);
         self::validateFileExists($path);
-        
+
         $contents = file_get_contents($path);
         if ($contents === false) {
             throw new RuntimeException("Failed to read file: {$path}");
         }
-        
+
         return $contents;
     }
 
@@ -77,15 +87,15 @@ class File
     public static function delete(string $path): bool
     {
         self::validatePath($path);
-        
+
         if (!file_exists($path)) {
             return false;
         }
-        
+
         if (!unlink($path)) {
             throw new RuntimeException("Failed to delete file: {$path}");
         }
-        
+
         return true;
     }
 
@@ -95,15 +105,15 @@ class File
     public static function makeDirectory(string $path, int $mode = 0755, bool $recursive = true): bool
     {
         self::validatePath($path);
-        
+
         if (is_dir($path)) {
             return true;
         }
-        
+
         if (!mkdir($path, $mode, $recursive)) {
             throw new RuntimeException("Failed to create directory: {$path}");
         }
-        
+
         return true;
     }
 
@@ -114,12 +124,12 @@ class File
     {
         self::validatePath($path);
         self::validateFileExists($path);
-        
+
         $size = filesize($path);
         if ($size === false) {
             throw new RuntimeException("Failed to get file size: {$path}");
         }
-        
+
         return $size;
     }
 
@@ -130,12 +140,12 @@ class File
     {
         self::validatePath($path);
         self::validateFileExists($path);
-        
+
         $time = filemtime($path);
         if ($time === false) {
             throw new RuntimeException("Failed to get modification time: {$path}");
         }
-        
+
         return $time;
     }
 
@@ -156,17 +166,17 @@ class File
         self::validatePath($source);
         self::validatePath($destination);
         self::validateFileExists($source);
-        
+
         if (!$overwrite && file_exists($destination)) {
             throw new RuntimeException("Destination file exists: {$destination}");
         }
-        
+
         self::ensureDirectoryExists(dirname($destination));
-        
+
         if (!copy($source, $destination)) {
             throw new RuntimeException("Failed to copy file from {$source} to {$destination}");
         }
-        
+
         return true;
     }
 
@@ -178,13 +188,13 @@ class File
         self::validatePath($source);
         self::validatePath($destination);
         self::validateFileExists($source);
-        
+
         self::ensureDirectoryExists(dirname($destination));
-        
+
         if (!rename($source, $destination)) {
             throw new RuntimeException("Failed to move file from {$source} to {$destination}");
         }
-        
+
         return true;
     }
 
@@ -193,7 +203,7 @@ class File
         if ($path === '') {
             throw new InvalidArgumentException('Path cannot be empty');
         }
-        
+
         if (strpos($path, "\0") !== false) {
             throw new InvalidArgumentException('Path contains null bytes');
         }
@@ -204,7 +214,7 @@ class File
         if (!file_exists($path)) {
             throw new RuntimeException("File does not exist: {$path}");
         }
-        
+
         if (!is_file($path)) {
             throw new RuntimeException("Path is not a file: {$path}");
         }

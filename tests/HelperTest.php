@@ -1,8 +1,10 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Marwa\Support\Tests;
 
+use InvalidArgumentException;
 use Marwa\Support\Helper;
 use PHPUnit\Framework\TestCase;
 
@@ -13,11 +15,11 @@ class HelperTest extends TestCase
     {
         $object = new \stdClass();
         $object->name = 'Original';
-        
-        $result = Helper::tap($object, function($obj) {
+
+        $result = Helper::tap($object, function ($obj) {
             $obj->name = 'Modified';
         });
-        
+
         $this->assertEquals('Modified', $object->name);
         $this->assertSame($object, $result);
     }
@@ -26,47 +28,43 @@ class HelperTest extends TestCase
     public function testPipeProcessesThroughCallbacks()
     {
         $result = Helper::pipe(' hello ', [
-            fn($s) => trim($s),
-            fn($s) => strtoupper($s),
-            fn($s) => $s . '!'
+            fn ($s) => trim($s),
+            fn ($s) => strtoupper($s),
+            fn ($s) => $s . '!'
         ]);
-        
+
         $this->assertEquals('HELLO!', $result);
     }
 
     // with() tests
     public function testWithReturnsCallbackResult()
     {
-        $result = Helper::with(['a' => 1], fn($a) => $a['a']);
+        $result = Helper::with(['a' => 1], fn ($a) => $a['a']);
         $this->assertEquals(1, $result);
     }
 
     public function testWithReturnsDefaultWhenNull()
     {
-        $result = Helper::with(null, fn($v) => $v, 'default');
+        $result = Helper::with(null, fn ($v) => $v, 'default');
         $this->assertEquals('default', $result);
     }
 
-    // dd() tests
-    public function testDdExits()
+    public function testDumpReturnsVarDumpOutput()
     {
-        $this->expectOutputString("int(1)\n");
-        $this->expectExceptionCode(1);
-        
-        Helper::dd(1);
+        $this->assertSame("int(1)\n", Helper::dump(1));
     }
 
     // retry() tests
     public function testRetrySucceedsAfterFailures()
     {
         $counter = 0;
-        $result = Helper::retry(3, function() use (&$counter) {
+        $result = Helper::retry(3, function () use (&$counter) {
             if (++$counter < 2) {
                 throw new \RuntimeException('Fail');
             }
             return 'success';
         });
-        
+
         $this->assertEquals('success', $result);
         $this->assertEquals(2, $counter);
     }
@@ -74,8 +72,8 @@ class HelperTest extends TestCase
     public function testRetryFailsAfterMaxAttempts()
     {
         $this->expectException(\RuntimeException::class);
-        
-        Helper::retry(2, function() {
+
+        Helper::retry(2, function () {
             throw new \RuntimeException('Always fails');
         });
     }
@@ -95,7 +93,7 @@ class HelperTest extends TestCase
     // value() tests
     public function testValueReturnsClosureResult()
     {
-        $result = Helper::value(fn() => 'closure');
+        $result = Helper::value(fn () => 'closure');
         $this->assertEquals('closure', $result);
     }
 
@@ -112,9 +110,9 @@ class HelperTest extends TestCase
             ['type' => 'B', 'value' => 2],
             ['type' => 'A', 'value' => 3]
         ];
-        
+
         $grouped = Helper::groupBy($data, 'type');
-        
+
         $this->assertCount(2, $grouped['A']);
         $this->assertCount(1, $grouped['B']);
     }
@@ -125,9 +123,9 @@ class HelperTest extends TestCase
             ['id' => 1, 'name' => 'A'],
             ['id' => 2, 'name' => 'B']
         ];
-        
+
         $keyed = Helper::keyBy($data, 'id');
-        
+
         $this->assertEquals('A', $keyed[1]['name']);
         $this->assertEquals('B', $keyed[2]['name']);
     }
@@ -135,11 +133,11 @@ class HelperTest extends TestCase
     public function testMemoizeCachesResults()
     {
         $counter = 0;
-        $memoized = Helper::memoize(function($x) use (&$counter) {
+        $memoized = Helper::memoize(function ($x) use (&$counter) {
             $counter++;
             return $x * 2;
         });
-        
+
         $this->assertEquals(4, $memoized(2));
         $this->assertEquals(4, $memoized(2));
         $this->assertEquals(1, $counter);
@@ -147,9 +145,9 @@ class HelperTest extends TestCase
 
     public function testCurryPartiallyApplies()
     {
-        $add = fn($a, $b, $c) => $a + $b + $c;
+        $add = fn ($a, $b, $c) => $a + $b + $c;
         $curried = Helper::curry($add);
-        
+
         $this->assertEquals(6, $curried(1)(2)(3));
     }
 
@@ -162,7 +160,7 @@ class HelperTest extends TestCase
 
     public function testTypeOfReturnsDetailedTypes()
     {
-        $this->assertEquals('callable', Helper::typeOf(fn() => null));
+        $this->assertEquals('callable', Helper::typeOf(fn () => null));
         $this->assertEquals('stdClass', Helper::typeOf(new \stdClass()));
         $this->assertEquals('string', Helper::typeOf('test'));
     }
@@ -188,18 +186,30 @@ class HelperTest extends TestCase
         $this->assertEquals(33.33, Helper::percentage(1, 3));
     }
 
+    public function testPercentageRejectsZeroWhole()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        Helper::percentage(1, 0);
+    }
+
     public function testMapRangeConvertsCorrectly()
     {
         $this->assertEquals(50, Helper::mapRange(5, 0, 10, 0, 100));
         $this->assertEquals(-50, Helper::mapRange(5, 10, 0, 0, -100));
     }
 
+    public function testMapRangeRejectsZeroSourceRange()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        Helper::mapRange(5, 1, 1, 0, 100);
+    }
+
     public function testMeasureReturnsExecutionTime()
     {
-        $time = Helper::measure(function() {
+        $time = Helper::measure(function () {
             usleep(100000); // 100ms
         });
-        
+
         $this->assertGreaterThanOrEqual(100, $time);
         $this->assertLessThan(200, $time);
     }

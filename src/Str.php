@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Marwa\Support;
 
@@ -172,22 +174,22 @@ class Str
         // Convert all dashes/underscores into separator
         $flip = $separator === '-' ? '_' : '-';
         $title = preg_replace('![' . preg_quote($flip) . ']+!u', $separator, $title);
-        
+
         // Replace @ with the word 'at'
         $title = str_replace('@', $separator . 'at' . $separator, $title);
-        
+
         // Remove all characters that are not the separator, letters, numbers, or whitespace
         $title = preg_replace('![^' . preg_quote($separator) . '\pL\pN\s]+!u', '', static::lower($title));
-        
+
         // Replace all separator characters and whitespace by a single separator
         $title = preg_replace('![' . preg_quote($separator) . '\s]+!u', $separator, $title);
-        
+
         return trim($title, $separator);
     }
 
-     /**
-     * Get portion of string between two strings
-     */
+    /**
+    * Get portion of string between two strings
+    */
     public static function between(string $string, string $start, string $end): string
     {
         return strstr(ltrim(strstr($string, $start)), $end, true) ?: '';
@@ -278,7 +280,7 @@ class Str
         preg_match('/^\s*([0-9.]+)\s*([KMGTPE]?B)\s*$/i', $value, $matches);
         $number = (float) $matches[1];
         $unit = strtoupper($matches[2] ?? 'B');
-        
+
         return match($unit) {
             'KB' => $number * 1024,
             'MB' => $number * 1024 ** 2,

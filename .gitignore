@@ -11,6 +11,7 @@
 .idea/
 .phpunit.result.cache
 .phpunit.cache
+.php-cs-fixer.cache
 .DS_Store
 *.swp
 
@@ -23,8 +24,8 @@
 /coverage/
 clover.xml
 phpunit.xml
+/var/
 
 # Local development files
 *.local.php
 *.backup
-
