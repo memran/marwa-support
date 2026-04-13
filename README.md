@@ -147,6 +147,120 @@ File::copy('source.txt', 'dest.txt');
 File::move('old.txt', 'new.txt');
 ```
 
+### JSON (`Json`)
+
+JSON encode/decode with error handling and utilities.
+
+```php
+use Marwa\Support\Json;
+
+// Encode/Decode
+Json::encode(['foo' => 'bar']);                    // '{"foo":"bar"}'
+Json::decode('{"foo":"bar"}');                     // ['foo' => 'bar']
+Json::decode('{"foo":"bar"}', false);              // stdClass object
+
+// Validation
+Json::isValid('{"foo":"bar"}');                    // true
+Json::isValid('not json');                         // false
+
+// Pretty print
+Json::pretty(['foo' => 'bar']);
+// {
+//     "foo": "bar"
+// }
+
+// Minify
+Json::minify('{"foo": "bar"}');                    // '{"foo":"bar"}'
+
+// Dot notation access
+$json = '{"user":{"name":"John"}}';
+Json::get($json, 'user.name');                     // "John"
+Json::has($json, 'user.name');                     // true
+
+// Array conversion
+Json::fromArray(['foo' => 'bar']);                 // '{"foo":"bar"}'
+Json::toArray('{"foo":"bar"}');                    // ['foo' => 'bar']
+```
+
+### URLs (`Url`)
+
+URL parsing, building, and manipulation.
+
+```php
+use Marwa\Support\Url;
+
+// Parse URL
+$components = Url::parse('https://example.com:8080/path?query=value#fragment');
+// ['scheme' => 'https', 'host' => 'example.com', 'port' => 8080, 'path' => '/path', 'query' => 'query=value', 'fragment' => 'fragment']
+
+// Build URL
+Url::build(['scheme' => 'https', 'host' => 'example.com', 'path' => '/path']);
+// "https://example.com/path"
+
+// Query string
+Url::query('https://example.com?foo=bar&baz=qux'); // ['foo' => 'bar', 'baz' => 'qux']
+Url::withQuery('https://example.com', ['foo' => 'bar']); // Adds/updates query params
+Url::withoutQuery('https://example.com?foo=bar', 'foo'); // Removes query param
+Url::getQuery('https://example.com?key=value', 'key'); // "value"
+
+// URL parts
+Url::scheme('https://example.com');               // "https"
+Url::host('https://example.com/path');            // "example.com"
+Url::port('https://example.com:8080');            // 8080
+Url::path('https://example.com/path/to');          // "/path/to"
+Url::fragment('https://example.com#section');      // "section"
+Url::domain('https://www.example.com');           // "example.com"
+
+// Utilities
+Url::isAbsolute('https://example.com');            // true
+Url::isAbsolute('/path');                          // false
+Url::fullDomain('https://example.com:8080/path'); // "https://example.com:8080"
+```
+
+### Numbers (`Number`)
+
+Number formatting, currency, percentage, and conversions.
+
+```php
+use Marwa\Support\Number;
+
+// Basic formatting
+Number::format(1234);                              // "1,234"
+Number::format(1234.567, 2);                       // "1,234.57"
+
+// Currency (uses NumberFormatter when available)
+Number::currency(1234.56);                         // "$1,234.56"
+
+// Percentage
+Number::percentage(0.5);                           // "50%"
+Number::percentage(0.333, 1);                      // "33.3%"
+
+// Ordinals
+Number::ordinal(1);                                // "1st"
+Number::ordinal(22);                              // "22nd"
+
+// Compact notation
+Number::compact(1500);                             // "1.5K"
+Number::compact(2000000);                          // "2M"
+Number::compact(1000000000);                       // "1B"
+
+// Bytes
+Number::bytes(1024);                              // "1 KB"
+Number::bytes(1572864, 1);                         // "1.5 MB"
+
+// Rounding
+Number::round(1.234, 2);                          // 1.23
+Number::ceil(4.2);                                 // 5
+Number::floor(4.8);                                // 4
+
+// Clamping
+Number::clamp(10, 0, 5);                          // 5
+Number::between(3, 1, 5);                         // true
+
+// Roman numerals
+Number::roman(1994);                               // "MCMXCIV"
+```
+
 ### Security (`Security`, `Crypt`, `Hash`, `Random`, `Sanitizer`, `XSS`, `CSRF`, `Validator`)
 
 Comprehensive security utilities.
