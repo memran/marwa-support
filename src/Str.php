@@ -277,17 +277,19 @@ class Str
      */
     public static function toBytes(string $value): int
     {
-        preg_match('/^\s*([0-9.]+)\s*([KMGTPE]?B)\s*$/i', $value, $matches);
+        if (!preg_match('/^\s*([0-9.]+)\s*([KMGTPE]?B)\s*$/i', $value, $matches)) {
+            throw new \InvalidArgumentException("Invalid byte format: {$value}");
+        }
         $number = (float) $matches[1];
-        $unit = strtoupper($matches[2] ?? 'B');
+        $unit = strtoupper($matches[2]);
 
         return match($unit) {
-            'KB' => $number * 1024,
-            'MB' => $number * 1024 ** 2,
-            'GB' => $number * 1024 ** 3,
-            'TB' => $number * 1024 ** 4,
-            'PB' => $number * 1024 ** 5,
-            'EB' => $number * 1024 ** 6,
+            'KB' => (int) ($number * 1024),
+            'MB' => (int) ($number * 1024 ** 2),
+            'GB' => (int) ($number * 1024 ** 3),
+            'TB' => (int) ($number * 1024 ** 4),
+            'PB' => (int) ($number * 1024 ** 5),
+            'EB' => (int) ($number * 1024 ** 6),
             default => (int) $number
         };
     }

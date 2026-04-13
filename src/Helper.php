@@ -205,11 +205,13 @@ class Helper
      */
     public static function memoize(callable $function): callable
     {
-        return function () use ($function) {
+        return function (...$args) use ($function) {
             static $cache = [];
-            $args = func_get_args();
             $key = serialize($args);
-            return $cache[$key] ?? ($cache[$key] = $function(...$args));
+            if (!array_key_exists($key, $cache)) {
+                $cache[$key] = $function(...$args);
+            }
+            return $cache[$key];
         };
     }
 

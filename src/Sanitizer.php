@@ -26,7 +26,7 @@ class Sanitizer
             'float' => (float) filter_var($value, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION),
             'encoded' => filter_var($value, FILTER_SANITIZE_ENCODED),
             'string_clean' => preg_replace('/[^\p{L}\p{N}\s]/u', '', (string) $value),
-            default => $input
+            default => throw new \InvalidArgumentException("Unknown sanitization type: {$type}")
         };
     }
 

@@ -45,7 +45,7 @@ class Html
                     $html[] = $key;
                 }
             } elseif (is_array($value)) {
-                $html[] = $key . '="' . implode(' ', array_map('htmlspecialchars', $value)) . '"';
+                $html[] = $key . '="' . implode(' ', array_map(fn(string $v): string => htmlspecialchars($v, ENT_QUOTES, 'UTF-8'), $value)) . '"';
             } elseif ($value !== null) {
                 $html[] = $key . '="' . htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8') . '"';
             }
@@ -59,6 +59,9 @@ class Html
      */
     public static function link(string $url, ?string $text = null, array $attributes = []): string
     {
+        if (!self::isValidUrl($url)) {
+            throw new InvalidArgumentException('Invalid link URL');
+        }
         $attributes['href'] = $url;
 
         if ($text === null) {
@@ -73,6 +76,9 @@ class Html
      */
     public static function image(string $src, string $alt = '', array $attributes = []): string
     {
+        if (!self::isValidUrl($src)) {
+            throw new InvalidArgumentException('Invalid image src URL');
+        }
         $attributes['src'] = $src;
         $attributes['alt'] = $alt;
 
@@ -84,6 +90,9 @@ class Html
      */
     public static function script(string $src, array $attributes = []): string
     {
+        if (!self::isValidUrl($src)) {
+            throw new InvalidArgumentException('Invalid script source URL');
+        }
         $attributes['src'] = $src;
 
         return self::element('script', $attributes);
@@ -94,10 +103,26 @@ class Html
      */
     public static function style(string $href, array $attributes = []): string
     {
+        if (!self::isValidUrl($href)) {
+            throw new InvalidArgumentException('Invalid style href URL');
+        }
         $attributes['rel'] = 'stylesheet';
         $attributes['href'] = $href;
 
         return self::element('link', $attributes);
+    }
+
+    private static function isValidUrl(string $url): bool
+    {
+        if (preg_match('/^https?:\/\//i', $url)) {
+            return filter_var($url, FILTER_VALIDATE_URL) !== false;
+        }
+
+        if (preg_match('/^\//', $url)) {
+            return true;
+        }
+
+        return false;
     }
 
     /**

@@ -11,6 +11,7 @@ class Validation
     protected array $errors = [];
     protected array $messages = [];
     protected array $customRules = [];
+    protected bool $validated = false;
 
     public static function make(array $data, array $rules, array $messages = []): self
     {
@@ -24,6 +25,7 @@ class Validation
     public function validate(): bool
     {
         $this->errors = [];
+        $this->validated = true;
 
         foreach ($this->rules as $field => $rules) {
             $rules = is_array($rules) ? $rules : explode('|', $rules);
@@ -48,7 +50,10 @@ class Validation
 
     public function fails(): bool
     {
-        return !$this->validate();
+        if (!$this->validated) {
+            return !$this->validate();
+        }
+        return !empty($this->errors);
     }
 
     public function addError(string $field, string $message): void
@@ -79,6 +84,8 @@ class Validation
             if (!$this->customRules[$rule]($field, $value, $parameters, $this->data)) {
                 $this->addError($field, $this->getMessage($field, $rule, $parameters));
             }
+        } else {
+            $this->addError($field, "The {$field} has an unknown rule '{$rule}'.");
         }
     }
 
@@ -152,6 +159,10 @@ class Validation
 
     protected function validateMin(string $field, $value, array $parameters): bool
     {
+        if (empty($parameters)) {
+            $this->addError($field, "The {$field} rule 'min' requires a parameter.");
+            return false;
+        }
         $min = (int) $parameters[0];
 
         if (is_string($value)) {
@@ -167,6 +178,10 @@ class Validation
 
     protected function validateMax(string $field, $value, array $parameters): bool
     {
+        if (empty($parameters)) {
+            $this->addError($field, "The {$field} rule 'max' requires a parameter.");
+            return false;
+        }
         $max = (int) $parameters[0];
 
         if (is_string($value)) {
@@ -197,11 +212,19 @@ class Validation
 
     protected function validateIn(string $field, $value, array $parameters): bool
     {
+        if (empty($parameters)) {
+            $this->addError($field, "The {$field} rule 'in' requires parameters.");
+            return false;
+        }
         return in_array($value, $parameters, true);
     }
 
     protected function validateSame(string $field, $value, array $parameters): bool
     {
+        if (empty($parameters)) {
+            $this->addError($field, "The {$field} rule 'same' requires a parameter.");
+            return false;
+        }
         $otherField = $parameters[0];
         $otherValue = $this->getValue($otherField);
 

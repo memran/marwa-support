@@ -92,7 +92,8 @@ class Crypt
     private static function normalizeKey(string $key, string $cipher): string
     {
         $expectedLength = str_contains($cipher, '128') ? 16 : 32;
+        $salt = 'marwa-support-v1';
 
-        return substr(hash('sha256', $key, true), 0, $expectedLength);
+        return substr(hash_pbkdf2('sha256', $key, $salt, 100000, $expectedLength, true), 0, $expectedLength);
     }
 }
