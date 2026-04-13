@@ -45,7 +45,7 @@ class Html
                     $html[] = $key;
                 }
             } elseif (is_array($value)) {
-                $html[] = $key . '="' . implode(' ', array_map(fn(string $v): string => htmlspecialchars($v, ENT_QUOTES, 'UTF-8'), $value)) . '"';
+                $html[] = $key . '="' . implode(' ', array_map(fn (string $v): string => htmlspecialchars($v, ENT_QUOTES, 'UTF-8'), $value)) . '"';
             } elseif ($value !== null) {
                 $html[] = $key . '="' . htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8') . '"';
             }

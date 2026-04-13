@@ -82,7 +82,7 @@ class Collection implements Countable, IteratorAggregate, JsonSerializable
             return new self(array_filter($this->items, $callback, ARRAY_FILTER_USE_BOTH));
         }
 
-        return new self(array_filter($this->items, fn($v) => !empty($v) || $v === '0' || $v === 0));
+        return new self(array_filter($this->items, fn ($v) => !empty($v) || $v === '0' || $v === 0));
     }
 
     public function map(callable $callback): self
