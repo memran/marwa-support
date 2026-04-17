@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Marwa\Support;
 
-use RuntimeException;
-
 class Hash
 {
     public static function make(string $password, array $options = []): string
