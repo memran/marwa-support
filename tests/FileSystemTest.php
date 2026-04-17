@@ -202,6 +202,10 @@ class FileSystemTest extends TestCase
 
     public function testPutWithCustomPermissions()
     {
+        if (DIRECTORY_SEPARATOR === '\\') {
+            $this->markTestSkipped('Skipped on Windows - permission behavior differs');
+        }
+
         $this->makeDirectoryIfNotExits();
         FileSystem::put($this->testFile, 'test', 0, 0644);
         $this->assertEquals('0644', substr(sprintf('%o', fileperms($this->testFile)), -4));
