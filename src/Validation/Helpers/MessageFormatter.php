@@ -39,7 +39,7 @@ class MessageFormatter
 
         return str_replace(
             array_keys($replacements),
-            array_map(fn($v) => is_bool($v) ? ($v ? 'true' : 'false') : (string) $v, $replacements),
+            array_map(fn ($v) => is_bool($v) ? ($v ? 'true' : 'false') : (string) $v, $replacements),
             $message
         );
     }

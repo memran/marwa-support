@@ -61,7 +61,7 @@ class InputNormalizer
         foreach ($request->getUploadedFiles() as $key => $uploadedFile) {
             if (is_array($uploadedFile)) {
                 $files[$key] = array_map(
-                    fn($file) => $file,
+                    fn ($file) => $file,
                     $uploadedFile
                 );
             } else {

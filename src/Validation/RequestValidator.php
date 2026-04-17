@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Marwa\Support\Validation;
 
 use Marwa\Support\Validation\Contracts\RuleInterface;
-use Marwa\Support\Validation\ErrorBag;
+use Marwa\Support\Validation\Contracts\ValidatorInterface;
 use Marwa\Support\Validation\Helpers\ComparisonValidators;
 use Marwa\Support\Validation\Helpers\DateValidators;
 use Marwa\Support\Validation\Helpers\InputNormalizer;
@@ -14,7 +14,6 @@ use Marwa\Support\Validation\Helpers\TransformProcessor;
 use Marwa\Support\Validation\Helpers\TypeCoercer;
 use Marwa\Support\Validation\Helpers\TypeValidators;
 use Marwa\Support\Validation\Helpers\ValueAccessor;
-use Marwa\Support\Validation\Contracts\ValidatorInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UploadedFileInterface;
 

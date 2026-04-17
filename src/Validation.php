@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Marwa\Support;
 
 use Marwa\Support\Validation\RequestValidator;
-use Marwa\Support\Validation\ValidationException;
 use Marwa\Support\Validation\Rules\ClosureRule;
+use Marwa\Support\Validation\ValidationException;
 
 class Validation
 {

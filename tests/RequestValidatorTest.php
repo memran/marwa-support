@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Marwa\Support\Tests;
 
+use Marwa\Support\Validation\ErrorBag;
 use Marwa\Support\Validation\RequestValidator;
 use Marwa\Support\Validation\ValidationException;
-use Marwa\Support\Validation\ErrorBag;
 use PHPUnit\Framework\TestCase;
 
 class RequestValidatorTest extends TestCase

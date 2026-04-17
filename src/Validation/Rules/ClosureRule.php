@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Marwa\Support\Validation\Rules;
 
 use Marwa\Support\Validation\AbstractRule;
-use Marwa\Support\Validation\Contracts\RuleInterface;
 
 final class ClosureRule extends AbstractRule
 {

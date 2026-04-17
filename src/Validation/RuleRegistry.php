@@ -5,25 +5,25 @@ declare(strict_types=1);
 namespace Marwa\Support\Validation;
 
 use Marwa\Support\Validation\Contracts\RuleInterface;
+use Marwa\Support\Validation\Rules\AcceptedRule;
+use Marwa\Support\Validation\Rules\ArrayRule;
 use Marwa\Support\Validation\Rules\BetweenRule;
+use Marwa\Support\Validation\Rules\BooleanRule;
 use Marwa\Support\Validation\Rules\ConfirmedRule;
-use Marwa\Support\Validation\Rules\DateRule;
 use Marwa\Support\Validation\Rules\DateFormatRule;
+use Marwa\Support\Validation\Rules\DateRule;
 use Marwa\Support\Validation\Rules\DeclinedRule;
 use Marwa\Support\Validation\Rules\EmailRule;
 use Marwa\Support\Validation\Rules\InRule;
+use Marwa\Support\Validation\Rules\IntegerRule;
 use Marwa\Support\Validation\Rules\MaxRule;
 use Marwa\Support\Validation\Rules\MinRule;
 use Marwa\Support\Validation\Rules\NumericRule;
+use Marwa\Support\Validation\Rules\RegexRule;
 use Marwa\Support\Validation\Rules\RequiredRule;
 use Marwa\Support\Validation\Rules\SameRule;
 use Marwa\Support\Validation\Rules\StringRule;
 use Marwa\Support\Validation\Rules\UrlRule;
-use Marwa\Support\Validation\Rules\AcceptedRule;
-use Marwa\Support\Validation\Rules\ArrayRule;
-use Marwa\Support\Validation\Rules\BooleanRule;
-use Marwa\Support\Validation\Rules\IntegerRule;
-use Marwa\Support\Validation\Rules\RegexRule;
 
 final class RuleRegistry
 {
