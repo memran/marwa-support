@@ -21,11 +21,11 @@
     "ext-json": "*",
     "ext-mbstring": "*",
     "ext-openssl": "*",
-    "psr/http-message": "^1.0"
+    "psr/http-message": "^2.0"
   },
   "require-dev": {
     "friendsofphp/php-cs-fixer": "^3.66",
-    "phpstan/phpstan": "^1.12",
+    "phpstan/phpstan": "^2.0",
     "phpunit/phpunit": "^9.6.33"
   },
   "autoload": {

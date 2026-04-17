@@ -4,18 +4,15 @@ Quick reference for AI agents working on this codebase.
 
 ## Quick Reference
 
+## Key Commands
+
 ```bash
-# Install & test
-composer install
-composer test
-
-# Lint & analyze
-vendor/bin/php-cs-fixer fix --dry-run
-vendor/bin/phpstan analyse --level=5
-
-# Run single test
-vendor/bin/phpunit tests/StrTest.php
-vendor/bin/phpunit --filter testSlug
+composer test           # Run PHPUnit
+composer test:coverage  # Run tests with text coverage
+composer analyse       # PHPStan (max level)
+composer lint          # Check coding standards
+composer fix           # Fix coding standards
+composer ci            # lint -> analyse -> test
 ```
 
 ## Project Structure

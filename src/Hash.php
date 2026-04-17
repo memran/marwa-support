@@ -15,13 +15,7 @@ class Hash
             'algorithm' => PASSWORD_DEFAULT
         ], $options);
 
-        $hash = password_hash($password, $options['algorithm'], $options);
-
-        if (!is_string($hash)) {
-            throw new RuntimeException('Password hashing failed');
-        }
-
-        return $hash;
+        return password_hash($password, $options['algorithm'], $options);
     }
 
     public static function verify(string $password, string $hash): bool
