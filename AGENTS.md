@@ -1,106 +1,199 @@
-# Repository Guidelines
+# Agent Guidelines
 
-## Project Structure & Module Organization
+Quick reference for AI agents working on this codebase.
 
-`src/` contains the library code under the `Marwa\Support\` namespace. Each utility is a single class file such as `Str.php`, `Arr.php`, `File.php`, and `Validation.php`. `tests/` mirrors that layout with PHPUnit cases like `StrTest.php` and `ArrTest.php`. `example.php` is a lightweight usage sample, and `README.md` is the public-facing package documentation. Composer autoloading is PSR-4, so new classes should live in `src/` with matching namespaces and filenames.
+## Quick Reference
 
-## Build, Test, and Development Commands
+```bash
+# Install & test
+composer install
+composer test
 
-Run `composer install` to install PHPUnit and regenerate autoload files. Use `composer test` for the default test suite and `composer test-coverage` to generate HTML coverage in `coverage/`. For focused work, run a single file or test with `vendor/bin/phpunit tests/StrTest.php` or `vendor/bin/phpunit --filter testSlug`.
+# Lint & analyze
+vendor/bin/php-cs-fixer fix --dry-run
+vendor/bin/phpstan analyse --level=5
 
-## Coding Style & Naming Conventions
+# Run single test
+vendor/bin/phpunit tests/StrTest.php
+vendor/bin/phpunit --filter testSlug
+```
 
-Target PHP 8.0+ and keep `declare(strict_types=1);` at the top of PHP files. Follow the existing style: 4-space indentation, opening braces on the next line for classes and methods, and descriptive `camelCase` method names. Class names use `StudlyCase`, test classes end in `Test`, and static utility APIs should remain small and type-hinted. No formatter or linter is configured in Composer, so match the surrounding code when editing.
+## Project Structure
 
-## Testing Guidelines
+### Directory Layout
+```
+src/           # Library code (Marwa\Support namespace)
+src/Validation/  # Validation system (Rules, Helpers, Contracts)
+tests/         # PHPUnit tests (*Test.php)
+coverage/     # Test coverage output
+```
 
-Tests use PHPUnit 9.6 with `phpunit.xml` loading `vendor/autoload.php` and collecting coverage from `src/`. Add or update tests whenever behavior changes, especially for edge cases in pure utility methods. Name new tests after the class under test, for example `tests/RandomTest.php`. Note: the current suite exits early around `HelperTest::testDdExits`, so verify targeted tests locally when changing adjacent helper behavior.
+### Naming Conventions
+- Classes: `PascalCase` (e.g., `Str.php`, `RequestValidator.php`)
+- Methods: `camelCase`
+- Tests: `*Test.php` (e.g., `StrTest.php`)
+- Interfaces: `*Interface` (e.g., `RuleInterface`)
+- Exceptions: `*Exception` (e.g., `ValidationException`)
 
-## Commit & Pull Request Guidelines
+## Code Standards
 
-Recent commit messages are short, imperative, and plain, for example `update composer`, `Fix issues`, and `Split security to multiple classes`. Keep commits focused and similarly direct. Pull requests should describe the behavioral change, list affected classes, mention added or updated tests, and include example usage when public APIs or README-visible behavior changes.
+### PHP Requirements
+- PHP 8.0+
+- `declare(strict_types=1);` at top of every file
 
-## Style
-
-- `declare(strict_types=1);`
-- PSR-1, PSR-12, PSR-4
+### Style Rules
 - 4-space indentation
-- Typed properties and explicit return types
-- PascalCase classes
-- `*Interface`, `*Exception`
-- Prefer small, single-purpose classes
-- Keep files small: prefer max 200 lines/class, 20 lines/method
-- Use constants and enums for finite states
+- Opening braces on next line for classes/methods
+- PSR-1, PSR-12, PSR-4 compliant
 
-## Engineering Principles
-
-- KISS, DRY, SOLID
-- Understand context before coding
-- Prefer composition over inheritance
-- Keep architecture modular and decoupled
-- Write production-ready, maintainable, scalable code
-- Prefer clarity over cleverness
-- Align with project architecture
-- Edit existing code over creating duplicates
-- Maintain backward compatibility
-- Keep changes minimal and scoped
+### Best Practices
+- Keep files under 200 lines/class
+- Keep methods under 20 lines
+- Use typed properties and explicit return types
+- Use constants/enums for finite states
 - Validate all inputs
-- Use composer packages by creating adapter
+- Prefer composition over inheritance
+
+## Validation System
+
+### Structure
+```
+src/Validation/
+├── Contracts/      # Interfaces
+├── Helpers/        # Utility classes
+├── Rules/          # Rule classes
+├── AbstractRule.php
+├── ErrorBag.php
+├── RequestValidator.php
+├── RuleRegistry.php
+└── ValidationException.php
+```
+
+### Creating Rules
+
+```php
+use Marwa\Support\Validation\AbstractRule;
+
+class MyRule extends AbstractRule
+{
+    public function name(): string
+    {
+        return 'my_rule';
+    }
+
+    public function validate(mixed $value, array $context): bool
+    {
+        return $value === 'expected';
+    }
+
+    public function message(string $field, array $attributes): string
+    {
+        return $this->formatMessage(
+            'The :attribute is invalid.',
+            $field,
+            $attributes
+        );
+    }
+}
+```
+
+### Using Validation
+
+```php
+use Marwa\Support\Validation\RequestValidator;
+use Marwa\Support\Validation\ValidationException;
+
+$validator = new RequestValidator();
+
+try {
+    $validated = $validator->validateInput($data, $rules);
+} catch (ValidationException $e) {
+    $errors = $e->getErrors();
+}
+```
+
+### Available Rules
+- Type: `required`, `string`, `integer`, `numeric`, `boolean`, `array`
+- Format: `email`, `url`, `ip`, `mac`
+- Size: `min:value`, `max:value`, `between:min,max`
+- Content: `in:val1,val2`, `same:field`, `confirmed`
+- Date: `date`, `date_format:Y-m-d`, `regex:pattern`
+- File: `file`, `image`, `mimes:jpeg,png`, `size:1MB`
+- Special: `accepted`, `declined`, `nullable`, `sometimes`
 
 ## Testing
 
-- Add tests in `tests/`
-- Use `*Test.php` or `*_test.php`
-- Cover routing, bootstrapping, middleware, and adapters
-- Run `composer test`, then `composer stan`
+### Guidelines
+- Add tests in `tests/` directory
+- Name tests after class: `tests/StrTest.php`
+- Cover edge cases and boundary conditions
 - Aim for 80% minimum coverage
-- Every public service method needs unit tests
 
-## Commit & PR
+### Running Tests
+```bash
+composer test              # Run all tests
+composer test-coverage   # Generate coverage report
+vendor/bin/phpunit --filter testMethod  # Run specific test
+```
 
-- Use short, imperative commit subjects
-- Keep commits focused: one logical change per commit
-- PRs should explain the problem, approach, and verification
-- Link related issues
-- Include CLI output or request/response examples when user-facing behavior changes
+### Test Structure
+```php
+use PHPUnit\Framework\TestCase;
+
+class MyClassTest extends TestCase
+{
+    public function testMethodName(): void
+    {
+        $result = MyClass::method('input');
+        $this->assertExpected($result);
+    }
+}
+```
+
+## Commit Guidelines
+
+### Commit Message Format
+- Use short, imperative subjects
+- Keep focused: one logical change per commit
+
+### Good Examples
+```
+Add str slug method
+Fix validation email rule
+Add mimes and size rules
+Update composer version constraints
+```
+
+### PR Requirements
+- Describe behavioral change
+- List affected classes
+- Mention added/updated tests
+- Include usage examples for public APIs
 
 ## Configuration
 
-- Copy `.env.example` to `.env` in consuming apps
+### Environment
+- Copy `.env.example` to `.env`
 - Never commit secrets
-- Document new env keys in `README.MD` or the relevant docs
 
-## Never
+### Dependencies
+- Add via `composer require`
+- Document new packages in README
 
-- Never change `vendor/*`
-- Never expose secrets or passwords
-- Suggest changes to vendor code instead of editing it
+## Never Do This
 
-## Error Handling
-
-- Use centralized exception handling
-- Log critical errors
-- Fail gracefully with meaningful responses
-
-## Performance
-
-- Optimize for readability first
-- Avoid premature optimization
-- Cache where necessary
-
-## Documentation
-
-- Update readme when code changes require it
-- Keep explanations useful
-- Add section anchors for navigation
-- Add examples
-- Add diagrams only when they help
+- ❌ Edit `vendor/*` code
+- ❌ Expose secrets/passwords
+- ❌ Create duplicate classes
+- ❌ Skip validation on inputs
 
 ## Versioning
 
-- Version: `v1.0.0`
+- Current: `v1.3.0`
 - Updated: `2026-04-17`
 
 ## Change Log
 
-- DATE : Change
+- `v1.3.0`: Rule-based validation system, file validation, IP/MAC rules
+- `v1.2.x`: Bug fixes and improvements
+- `v1.0.0`: Initial release
