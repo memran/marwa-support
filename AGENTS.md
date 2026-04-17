@@ -180,6 +180,45 @@ Update composer version constraints
 - Add via `composer require`
 - Document new packages in README
 
+## Troubleshooting
+
+### Common PHPStan Errors
+
+| Error | Fix |
+|-------|-----|
+| `Undefined type 'Psr\Http\Message\ServerRequestInterface'` | Run `composer install` to install psr/http-message |
+| `Undefined type 'Marwa\Support\Validation\Contracts\RuleInterface'` | Check namespace in file matches folder path |
+| `Call to undefined method` | Ensure class extends correct base class |
+| `Parameter #1 expects array, array<int,mixed> given` | Use `array<string,mixed>` type for nested arrays |
+
+### Common Test Failures
+
+| Failure | Fix |
+|--------|-----|
+| `testPutWithCustomPermissions` | Pre-existing Windows permission issue, not validation |
+| `No tests found` | Check test file ends in `Test.php` and class extends `TestCase` |
+| `Call to undefined method` | Ensure test calls existing class methods |
+
+### Common Validation Errors
+
+| Error | Fix |
+|-------|-----|
+| `regex rule fails` | Pattern needs delimiters: `regex:/^[A-Z]+$/` not `regex:^[A-Z]+$` |
+| `mimes rule not found` | Add inline in `RequestValidator.php` match() |
+| `size rule not found` | Add inline in `RequestValidator.php` match() |
+
+### How to Add New Validation Rule
+
+**Option 1: Inline (simple rules)**
+1. Add case in `RequestValidator.php` match() block
+2. Return error message or null for pass
+
+**Option 2: Rule class (complex rules)**
+1. Create `src/Validation/Rules/MyRule.php`
+2. Extend `AbstractRule`
+3. Implement `name()`, `validate()`, `message()`
+4. Register in `RuleRegistry` if using rule classes
+
 ## Never Do This
 
 - ❌ Edit `vendor/*` code
