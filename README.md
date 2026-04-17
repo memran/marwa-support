@@ -333,7 +333,7 @@ Validator::isMalicious('<script>alert(1)</script>'); // true
 
 ### Validation (`Validation`)
 
-Full-featured validation with pipe syntax.
+Full-featured validation with pipe syntax. Uses the new rule-based validation system internally.
 
 ```php
 use Marwa\Support\Validation;
@@ -368,10 +368,90 @@ $validator = Validation::make(
     ['email.email' => 'Please enter a valid email address']
 );
 
-// Custom rules
+// Custom rules via extend()
 $validator = Validation::make(['code' => 'ABC123'], ['code' => 'required']);
 $validator->extend('uppercase', fn($field, $value) => strtoupper($value) === $value);
 $validator->addError('code', 'Code must be uppercase');
+```
+
+### Advanced Validation (`Marwa\Support\Validation\RequestValidator`)
+
+For complex validation scenarios, use the full-featured rule-based validation system directly.
+
+```php
+use Marwa\Support\Validation\RequestValidator;
+use Marwa\Support\Validation\ValidationException;
+
+$validator = new RequestValidator();
+
+// Validate array input
+$validated = $validator->validateInput(
+    ['name' => 'John', 'email' => 'john@example.com'],
+    ['name' => 'required|min:2|max:50', 'email' => 'required|email']
+);
+
+// With PSR-7 ServerRequest
+try {
+    $validated = $validator->validateRequest($request, $rules);
+} catch (ValidationException $e) {
+    $errors = $e->getErrors();    // All errors
+    $firstErrors = $e->getFirstErrors(); // First error per field
+}
+
+// Built-in rules:
+// - Type: required, present, filled, string, integer, numeric, boolean, array
+// - Format: email, url, ip, mac
+// - Size: min:value, max:value, between:min,max
+// - Content: in:value1,value2, same:field, confirmed, date, date_format:Y-m-d, regex:pattern
+// - Special: accepted, declined
+
+// Custom field attributes
+$validated = $validator->validateInput(
+    $input,
+    $rules,
+    [],           // custom messages
+    ['name' => 'Full Name']  // attribute labels
+);
+```
+
+### Validation Rules
+
+Individual rule classes for custom validation logic.
+
+```php
+use Marwa\Support\Validation\Rules\RequiredRule;
+use Marwa\Support\Validation\Rules\EmailRule;
+use Marwa\Support\Validation\Rules\MinRule;
+
+// Use rules directly
+$rule = new RequiredRule();
+$isValid = $rule->validate($value, ['input' => $data, 'field' => 'email']);
+$message = $rule->message('email', []);
+
+// Register custom rules
+$registry = new RuleRegistry();
+$registry->register('custom', MyCustomRule::class);
+
+// Create custom rule
+use Marwa\Support\Validation\AbstractRule;
+
+class UppercaseRule extends AbstractRule
+{
+    public function name(): string
+    {
+        return 'uppercase';
+    }
+
+    public function validate(mixed $value, array $context): bool
+    {
+        return $value === strtoupper($value);
+    }
+
+    public function message(string $field, array $attributes): string
+    {
+        return $this->formatMessage('The :attribute must be uppercase.', $field, $attributes);
+    }
+}
 ```
 
 ### Helpers (`Helper`)
