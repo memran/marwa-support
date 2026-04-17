@@ -260,6 +260,8 @@ final class RequestValidator implements ValidatorInterface
             'date' => $this->dateValidators->isDate($value) ? null : $this->formatter->message($field, $name, 'The :attribute field must be a valid date.', $messages, $attributes, ['value' => $value]),
             'date_format' => $this->dateValidators->matchesDateFormat($value, $parameters[0] ?? '') ? null : $this->formatter->message($field, $name, 'The :attribute field must match the format :format.', $messages, $attributes, ['format' => $parameters[0] ?? '', 'value' => $value]),
             'regex' => $this->dateValidators->matchesRegex($value, $parameters[0] ?? '') ? null : $this->formatter->message($field, $name, 'The :attribute field format is invalid.', $messages, $attributes, ['value' => $value]),
+            'mimes' => $this->validateMimes($value, $parameters) ? null : $this->formatter->message($field, $name, 'The :attribute must be a file of type: :values.', $messages, $attributes, ['values' => implode(', ', $parameters), 'value' => $value]),
+            'size' => $this->validateSize($value, $parameters[0] ?? '0') ? null : $this->formatter->message($field, $name, 'The :attribute must not be larger than :size.', $messages, $attributes, ['size' => $parameters[0] ?? '', 'value' => $value]),
             'default' => null,
             'trim', 'lowercase', 'uppercase', 'nullable', 'sometimes', 'bail' => null,
             default => null,
@@ -269,5 +271,70 @@ final class RequestValidator implements ValidatorInterface
     private function resolveDefaultRegistry(): RuleRegistry
     {
         return new RuleRegistry();
+    }
+
+    private const MIME_MAP = [
+        'htm' => 'text/html',
+        'html' => 'text/html',
+        'txt' => 'text/plain',
+        'csv' => 'text/csv',
+        'json' => 'application/json',
+        'pdf' => 'application/pdf',
+        'zip' => 'application/zip',
+        'doc' => 'application/msword',
+        'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'xls' => 'application/vnd.ms-excel',
+        'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'jpg' => 'image/jpeg',
+        'jpeg' => 'image/jpeg',
+        'png' => 'image/png',
+        'gif' => 'image/gif',
+        'webp' => 'image/webp',
+        'svg' => 'image/svg+xml',
+        'bmp' => 'image/bmp',
+        'tiff' => 'image/tiff',
+    ];
+
+    private function validateMimes(mixed $value, array $allowedExtensions): bool
+    {
+        if (!$value instanceof UploadedFileInterface) {
+            return false;
+        }
+
+        $mimeType = $value->getClientMediaType();
+        $allowedMimes = [];
+
+        foreach ($allowedExtensions as $ext) {
+            $ext = strtolower(trim($ext));
+            $allowedMimes[] = self::MIME_MAP[$ext] ?? $ext;
+        }
+
+        return in_array($mimeType, $allowedMimes, true);
+    }
+
+    private function validateSize(mixed $value, string $maxSize): bool
+    {
+        if (!$value instanceof UploadedFileInterface) {
+            return false;
+        }
+
+        $bytes = $this->parseBytes($maxSize);
+        return $value->getSize() <= $bytes;
+    }
+
+    private function parseBytes(string $value): int
+    {
+        $value = trim($value);
+        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+        $value = strtoupper($value);
+
+        foreach ($units as $i => $unit) {
+            if (str_ends_with($value, $unit)) {
+                $number = (float) substr($value, 0, -strlen($unit));
+                return (int) ($number * pow(1024, $i));
+            }
+        }
+
+        return (int) $value;
     }
 }
