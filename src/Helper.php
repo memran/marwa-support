@@ -203,14 +203,21 @@ class Helper
      * @param callable $function
      * @return callable
      */
-    public static function memoize(callable $function): callable
+    public static function memoize(callable $function, int $maxSize = 128): callable
     {
-        return function (...$args) use ($function) {
+        return function (...$args) use ($function, $maxSize) {
             static $cache = [];
             $key = serialize($args);
-            if (!array_key_exists($key, $cache)) {
-                $cache[$key] = $function(...$args);
+
+            if (array_key_exists($key, $cache)) {
+                return $cache[$key];
             }
+
+            if (count($cache) >= $maxSize) {
+                array_shift($cache);
+            }
+
+            $cache[$key] = $function(...$args);
             return $cache[$key];
         };
     }
@@ -311,13 +318,65 @@ class Helper
     }
 
     /**
-     * Deep clone an object
-     * @param object $object
-     * @return object
+     * Deep clone an object without triggering __wakeup/__destruct magic methods.
+     *
+     * @template T of object
+     * @param T $object
+     * @return T
      */
     public static function deepClone(object $object): object
     {
-        return unserialize(serialize($object));
+        return self::recursiveClone($object, []);
+    }
+
+    /**
+     * @param object $object
+     * @param array<int, object> $cloned
+     * @return object
+     */
+    private static function recursiveClone(object $object, array $cloned): object
+    {
+        $oid = spl_object_id($object);
+        if (isset($cloned[$oid])) {
+            return $cloned[$oid];
+        }
+
+        $clone = clone $object;
+        $cloned[$oid] = $clone;
+
+        $reflection = new \ReflectionObject($clone);
+        foreach ($reflection->getProperties() as $property) {
+            $property->setAccessible(true);
+            $value = $property->getValue($clone);
+
+            if (is_object($value)) {
+                $property->setValue($clone, self::recursiveClone($value, $cloned));
+            } elseif (is_array($value)) {
+                $property->setValue($clone, self::cloneArrayValues($value, $cloned));
+            }
+        }
+
+        return $clone;
+    }
+
+    /**
+     * @param array $array
+     * @param array<int, object> $cloned
+     * @return array
+     */
+    private static function cloneArrayValues(array $array, array $cloned): array
+    {
+        $result = [];
+        foreach ($array as $key => $value) {
+            if (is_object($value)) {
+                $result[$key] = self::recursiveClone($value, $cloned);
+            } elseif (is_array($value)) {
+                $result[$key] = self::cloneArrayValues($value, $cloned);
+            } else {
+                $result[$key] = $value;
+            }
+        }
+        return $result;
     }
 
     /**

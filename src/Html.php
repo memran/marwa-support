@@ -17,8 +17,13 @@ class Html
 {
     /**
      * Generate HTML element with attributes
+     *
+     * @param string|null $content  Raw HTML content. Only pass unescaped content
+     *                              when it has already been escaped or validated.
+     * @param bool $escapeContent   Set to false only when $content is trusted
+     *                              pre-escaped HTML (e.g. nested element output).
      */
-    public static function element(string $tag, array $attributes = [], ?string $content = null): string
+    public static function element(string $tag, array $attributes = [], ?string $content = null, bool $escapeContent = true): string
     {
         $tag = strtolower(trim($tag));
         self::validateTag($tag);
@@ -29,7 +34,12 @@ class Html
             return "<{$tag}{$attrs}>";
         }
 
-        return "<{$tag}{$attrs}>" . ($content ?? '') . "</{$tag}>";
+        $content = $content ?? '';
+        if ($escapeContent) {
+            $content = self::escape($content);
+        }
+
+        return "<{$tag}{$attrs}>" . $content . "</{$tag}>";
     }
 
     /**
@@ -40,14 +50,19 @@ class Html
         $html = [];
 
         foreach ($attributes as $key => $value) {
+            self::validateAttributeName((string) $key);
+
             if (is_bool($value)) {
                 if ($value) {
                     $html[] = $key;
                 }
             } elseif (is_array($value)) {
-                $html[] = $key . '="' . implode(' ', array_map(fn (string $v): string => htmlspecialchars($v, ENT_QUOTES, 'UTF-8'), $value)) . '"';
+                $html[] = $key . '="' . implode(' ', array_map(
+                    fn ($item) => self::escapeAttributeValue((string) $key, (string) $item),
+                    $value
+                )) . '"';
             } elseif ($value !== null) {
-                $html[] = $key . '="' . htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8') . '"';
+                $html[] = $key . '="' . self::escapeAttributeValue((string) $key, (string) $value) . '"';
             }
         }
 
@@ -175,10 +190,10 @@ class Html
             if ($selected !== null && (string)$value === (string)$selected) {
                 $optionAttrs['selected'] = true;
             }
-            $optionsHtml .= self::element('option', $optionAttrs, $label);
+            $optionsHtml .= self::element('option', $optionAttrs, (string) $label);
         }
 
-        return self::element('select', $attributes, $optionsHtml);
+        return self::element('select', $attributes, $optionsHtml, false);
     }
 
     /**
@@ -197,9 +212,9 @@ class Html
                     $children = self::fromArray($children);
                 }
 
-                $html .= self::element($tag, $attributes, $children);
+                $html .= self::element($tag, $attributes, (string) $children, false);
             } else {
-                $html .= self::element($tag, [], $content);
+                $html .= self::element($tag, [], (string) $content);
             }
         }
 
@@ -263,14 +278,15 @@ class Html
      */
     private static function cssToXpath(string $selector): string
     {
-        // Basic CSS to XPath conversion
+        $selector = preg_replace('/[^a-zA-Z0-9\s>+~.#:\[\]="\',\-\(\)*]/', '', $selector);
+
         $selector = preg_replace('/\s*>\s*/', '/', $selector);
         $selector = preg_replace('/\s*\+\s*/', '/following-sibling::*[1]/', $selector);
         $selector = preg_replace('/\s*~\s*/', '/following-sibling::', $selector);
         $selector = preg_replace('/#([\w-]+)/', '[@id="$1"]', $selector);
         $selector = preg_replace('/\.([\w-]+)/', '[contains(concat(" ", @class, " "), " $1 ")]', $selector);
 
-        return '//' . $selector;
+        return '//' . ltrim($selector, '/');
     }
 
     /**
@@ -295,19 +311,19 @@ class Html
             'b', 'base', 'bdi', 'bdo', 'blockquote', 'body', 'br', 'button',
             'canvas', 'caption', 'cite', 'code', 'col', 'colgroup',
             'data', 'datalist', 'dd', 'del', 'details', 'dfn', 'dialog', 'div', 'dl', 'dt',
-            'em', 'embed',
+            'em',
             'fieldset', 'figcaption', 'figure', 'footer', 'form',
             'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'head', 'header', 'hr', 'html',
-            'i', 'iframe', 'img', 'input', 'ins',
+            'i', 'img', 'input', 'ins',
             'kbd',
             'label', 'legend', 'li', 'link',
             'main', 'map', 'mark', 'meta', 'meter',
             'nav', 'noscript',
-            'object', 'ol', 'optgroup', 'option',
+            'ol', 'optgroup', 'option',
             'p', 'param', 'picture', 'pre', 'progress',
             'q',
             'rp', 'rt', 'ruby',
-            's', 'samp', 'script', 'section', 'select', 'small', 'source', 'span', 'strong', 'style', 'sub', 'summary', 'sup',
+            's', 'samp', 'section', 'select', 'small', 'source', 'span', 'strong', 'sub', 'summary', 'sup',
             'table', 'tbody', 'td', 'template', 'textarea', 'tfoot', 'th', 'thead', 'time', 'title', 'tr', 'track',
             'u', 'ul',
             'var', 'video',
@@ -366,19 +382,68 @@ class Html
             $metaTags .= self::meta($name, $content);
         }
 
-        return self::doctype() .
-               self::element(
-                   'html',
-                   ['lang' => 'en'],
-                   self::element(
-                       'head',
-                       [],
-                       self::element('title', [], $title) .
-                       $metaTags .
-                       self::element('meta', ['charset' => 'UTF-8']) .
-                       self::element('meta', ['name' => 'viewport', 'content' => 'width=device-width, initial-scale=1.0'])
-                   ) .
-                   self::element('body', [], $content)
-               );
+        $head = self::element(
+            'head',
+            [],
+            self::element('title', [], $title) .
+            $metaTags .
+            self::element('meta', ['charset' => 'UTF-8']) .
+            self::element('meta', ['name' => 'viewport', 'content' => 'width=device-width, initial-scale=1.0']),
+            false
+        );
+
+        return self::doctype() . self::element(
+            'html',
+            ['lang' => 'en'],
+            $head . self::element('body', [], $content),
+            false
+        );
+    }
+
+    /**
+     * Generate an HTML element with trusted raw HTML content.
+     *
+     * WARNING: $content is rendered unescaped. Only pass content that has
+     * already been validated or escaped. Never pass user input directly.
+     */
+    public static function rawElement(string $tag, array $attributes = [], ?string $content = null): string
+    {
+        return self::element($tag, $attributes, $content, false);
+    }
+
+    private static function validateAttributeName(string $name): void
+    {
+        if (!preg_match('/^[A-Za-z_:][A-Za-z0-9:._-]*$/', $name)) {
+            throw new InvalidArgumentException("Invalid HTML attribute: {$name}");
+        }
+
+        if (stripos($name, 'on') === 0) {
+            throw new InvalidArgumentException("Event handler attributes are not allowed: {$name}");
+        }
+    }
+
+    private static function escapeAttributeValue(string $name, string $value): string
+    {
+        if (in_array(strtolower($name), ['href', 'src', 'action', 'formaction', 'poster'], true)) {
+            self::validateUrlAttribute($value, $name);
+        }
+
+        return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    }
+
+    private static function validateUrlAttribute(string $value, string $name): void
+    {
+        if (preg_match('/[\s\x00-\x1F\x7F]/', $value)) {
+            throw new InvalidArgumentException("Invalid URL attribute value for {$name}");
+        }
+
+        $scheme = parse_url($value, PHP_URL_SCHEME);
+        if ($scheme === null || $scheme === false || $scheme === '') {
+            return;
+        }
+
+        if (!in_array(strtolower($scheme), ['http', 'https', 'mailto', 'tel'], true)) {
+            throw new InvalidArgumentException("Unsafe URL scheme for {$name}: {$scheme}");
+        }
     }
 }

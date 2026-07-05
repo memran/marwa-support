@@ -12,16 +12,16 @@ class CryptTest extends TestCase
 {
     public function testEncryptAndDecryptRoundTrip(): void
     {
-        $encrypted = Crypt::encrypt('secret-value', 'app-key');
+        $encrypted = Crypt::encrypt('secret-value', 'my-secret-passphrase');
 
         $this->assertNotSame('secret-value', $encrypted);
-        $this->assertSame('secret-value', Crypt::decrypt($encrypted, 'app-key'));
+        $this->assertSame('secret-value', Crypt::decrypt($encrypted, 'my-secret-passphrase'));
     }
 
     public function testDecryptRejectsInvalidPayload(): void
     {
         $this->expectException(RuntimeException::class);
-        Crypt::decrypt('not-base64', 'app-key');
+        Crypt::decrypt('not-base64', 'my-secret-passphrase');
     }
 
     public function testEncryptRejectsEmptyKey(): void

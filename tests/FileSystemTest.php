@@ -217,4 +217,30 @@ class FileSystemTest extends TestCase
         $this->assertFileExists($this->testFile);
         $this->assertStringEqualsFile($this->testFile, 'test');
     }
+
+    public function testPathWithinResolvesRelativePathInsideRoot()
+    {
+        $this->makeDirectoryIfNotExits();
+
+        $this->assertSame(
+            $this->testDir . '/uploads/file.txt',
+            FileSystem::pathWithin($this->testDir, 'uploads/file.txt')
+        );
+    }
+
+    public function testPathWithinRejectsTraversalOutsideRoot()
+    {
+        $this->makeDirectoryIfNotExits();
+        $this->expectException(InvalidArgumentException::class);
+
+        FileSystem::pathWithin($this->testDir, '../outside.txt');
+    }
+
+    public function testPathWithinRejectsAbsolutePaths()
+    {
+        $this->makeDirectoryIfNotExits();
+        $this->expectException(InvalidArgumentException::class);
+
+        FileSystem::pathWithin($this->testDir, __FILE__);
+    }
 }

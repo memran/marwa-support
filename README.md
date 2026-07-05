@@ -725,7 +725,7 @@ $collection->toJson();
 
 ## Configuration
 
-The library is mostly configuration-free. Pass secrets such as encryption keys from your application configuration or environment, not from hard-coded strings. For CSRF helpers, call them only in applications that already manage PHP sessions safely.
+The library is mostly configuration-free. Pass secrets such as encryption keys from your application configuration or environment, not from hard-coded strings. `Crypt` expects exact AES key material, for example a 32-byte key stored as `base64:` followed by `base64_encode(random_bytes(32))` for the default AES-256-GCM cipher. For CSRF helpers, call them only in applications that already manage PHP sessions safely.
 
 ## Testing
 

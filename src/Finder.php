@@ -32,7 +32,8 @@ class Finder
 
     public function name(string $pattern): self
     {
-        $this->filters[] = fn ($file) => preg_match("/{$pattern}/", $file->getFilename());
+        $escaped = preg_quote($pattern, '/');
+        $this->filters[] = fn ($file) => preg_match("/{$escaped}/", $file->getFilename());
         return $this;
     }
 

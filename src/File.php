@@ -29,7 +29,7 @@ class File
             $contents = json_encode($contents, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR);
         }
 
-        $tempPath = $path . '.' . uniqid('', true) . '.tmp';
+        $tempPath = $path . '.' . bin2hex(random_bytes(8)) . '.tmp';
         $bytes = @file_put_contents($tempPath, (string) $contents, $flags | LOCK_EX);
 
         if ($bytes === false) {
@@ -88,12 +88,8 @@ class File
     {
         self::validatePath($path);
 
-        if (!file_exists($path)) {
-            return false;
-        }
-
         if (!unlink($path)) {
-            throw new RuntimeException("Failed to delete file: {$path}");
+            return false;
         }
 
         return true;
@@ -198,6 +194,33 @@ class File
         return true;
     }
 
+    /**
+     * Resolve a relative path and ensure it stays inside the given root directory.
+     */
+    public static function pathWithin(string $root, string $path): string
+    {
+        self::validatePath($root);
+        self::validatePath($path);
+
+        if (self::isAbsolutePath($path)) {
+            throw new InvalidArgumentException('Path must be relative to the root directory');
+        }
+
+        $realRoot = realpath($root);
+        if ($realRoot === false || !is_dir($realRoot)) {
+            throw new RuntimeException("Root directory does not exist: {$root}");
+        }
+
+        $candidate = self::normalizePath($realRoot . DIRECTORY_SEPARATOR . $path);
+        $rootPrefix = rtrim($realRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+
+        if ($candidate !== $realRoot && strpos($candidate, $rootPrefix) !== 0) {
+            throw new InvalidArgumentException('Path escapes the root directory');
+        }
+
+        return $candidate;
+    }
+
     private static function validatePath(string $path): void
     {
         if ($path === '') {
@@ -232,5 +255,32 @@ class File
         if (!is_dir($path) && !self::makeDirectory($path, $mode, true)) {
             throw new RuntimeException("Failed to create directory: {$path}");
         }
+    }
+
+    private static function isAbsolutePath(string $path): bool
+    {
+        return str_starts_with($path, DIRECTORY_SEPARATOR)
+            || preg_match('/^[A-Za-z]:[\\\\\/]/', $path) === 1;
+    }
+
+    private static function normalizePath(string $path): string
+    {
+        $parts = [];
+        $path = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $path);
+
+        foreach (explode(DIRECTORY_SEPARATOR, $path) as $part) {
+            if ($part === '' || $part === '.') {
+                continue;
+            }
+
+            if ($part === '..') {
+                array_pop($parts);
+                continue;
+            }
+
+            $parts[] = $part;
+        }
+
+        return DIRECTORY_SEPARATOR . implode(DIRECTORY_SEPARATOR, $parts);
     }
 }

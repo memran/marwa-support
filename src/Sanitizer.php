@@ -21,7 +21,7 @@ class Sanitizer
         return match($type) {
             'string' => htmlspecialchars(trim((string) $value), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
             'email' => filter_var($value, FILTER_SANITIZE_EMAIL),
-            'url' => filter_var($value, FILTER_SANITIZE_URL),
+            'url' => self::url((string) $value),
             'int' => (int) filter_var($value, FILTER_SANITIZE_NUMBER_INT),
             'float' => (float) filter_var($value, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION),
             'encoded' => filter_var($value, FILTER_SANITIZE_ENCODED),
@@ -42,5 +42,21 @@ class Sanitizer
         $extension = preg_replace('/[^a-zA-Z0-9]+/', '', $extension) ?? '';
 
         return $extension === '' ? $name : $name . '.' . $extension;
+    }
+
+    public static function url(string $url, array $allowedSchemes = ['http', 'https', 'mailto', 'tel']): string
+    {
+        $url = trim(filter_var($url, FILTER_SANITIZE_URL));
+
+        if ($url === '' || preg_match('/[\x00-\x1F\x7F]/', $url)) {
+            return '';
+        }
+
+        $scheme = parse_url($url, PHP_URL_SCHEME);
+        if ($scheme === null || $scheme === false || $scheme === '') {
+            return $url;
+        }
+
+        return in_array(strtolower($scheme), $allowedSchemes, true) ? $url : '';
     }
 }
